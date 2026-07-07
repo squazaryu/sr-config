@@ -1,0 +1,64 @@
+# Госуслуги и гос. сервисы
+DOMAIN-SUFFIX,gosuslugi.ru
+DOMAIN-SUFFIX,esia.gosuslugi.ru
+DOMAIN-SUFFIX,mos.ru
+DOMAIN-SUFFIX,emias.info
+
+# Яндекс
+DOMAIN-SUFFIX,yandex.ru
+DOMAIN-SUFFIX,yandex.net
+DOMAIN-SUFFIX,ya.ru
+DOMAIN-SUFFIX,yastatic.net
+DOMAIN-SUFFIX,kinopoisk.ru
+DOMAIN-SUFFIX,kinopoisk.dev
+DOMAIN-SUFFIX,music.yandex.ru
+DOMAIN-SUFFIX,lavka.yandex.ru
+DOMAIN-SUFFIX,eda.yandex.ru
+DOMAIN-SUFFIX,maps.yandex.ru
+DOMAIN-SUFFIX,yandexgo.com
+
+# Соцсети и медиа РФ
+DOMAIN-SUFFIX,vk.com
+DOMAIN-SUFFIX,vk.ru
+DOMAIN-SUFFIX,ok.ru
+DOMAIN-SUFFIX,mail.ru
+DOMAIN-SUFFIX,rutube.ru
+DOMAIN-SUFFIX,wink.ru
+DOMAIN-SUFFIX,rustore.ru
+
+# Маркетплейсы и e-commerce
+DOMAIN-SUFFIX,ozon.ru
+DOMAIN-SUFFIX,ozonusercontent.com
+DOMAIN-SUFFIX,wildberries.ru
+DOMAIN-SUFFIX,wb.ru
+DOMAIN-SUFFIX,avito.ru
+DOMAIN-SUFFIX,lamoda.ru
+DOMAIN-SUFFIX,megamarket.ru
+DOMAIN-SUFFIX,vkusvill.ru
+DOMAIN-SUFFIX,dns-shop.ru
+
+# Банки
+DOMAIN-SUFFIX,tbank.ru
+DOMAIN-SUFFIX,tinkoff.ru
+DOMAIN-SUFFIX,sber.ru
+DOMAIN-SUFFIX,sberbank.ru
+DOMAIN-SUFFIX,online.sberbank.ru
+DOMAIN-SUFFIX,vtb.ru
+DOMAIN-SUFFIX,alfabank.ru
+
+# Связь
+DOMAIN-SUFFIX,mts.ru
+DOMAIN-SUFFIX,lk.mts.ru
+DOMAIN-SUFFIX,login.mts.ru
+DOMAIN-SUFFIX,pay.mts.ru
+DOMAIN-SUFFIX,megafon.ru
+DOMAIN-SUFFIX,beeline.ru
+DOMAIN-SUFFIX,t2.ru
+
+# Карты, транспорт, прочее
+DOMAIN-SUFFIX,2gis.ru
+DOMAIN-SUFFIX,rzd.ru
+DOMAIN-SUFFIX,aviasales.ru
+DOMAIN-SUFFIX,aviasales.com
+DOMAIN-SUFFIX,hh.ru
+DOMAIN-SUFFIX,cian.ru

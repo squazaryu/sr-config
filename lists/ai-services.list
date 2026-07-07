@@ -1,0 +1,32 @@
+# OpenAI / ChatGPT
+DOMAIN-SUFFIX,chatgpt.com
+DOMAIN-SUFFIX,openai.com
+DOMAIN,auth.openai.com
+DOMAIN,ios.chat.openai.com
+DOMAIN-SUFFIX,oaistatic.com
+DOMAIN-SUFFIX,oaiusercontent.com
+DOMAIN-SUFFIX,intercom.io
+DOMAIN-SUFFIX,intercomcdn.com
+DOMAIN-SUFFIX,featuregates.org
+DOMAIN-SUFFIX,segment.io
+DOMAIN-SUFFIX,ct.sendgrid.net
+
+# Anthropic / Claude
+DOMAIN,claude.ai
+DOMAIN-SUFFIX,anthropic.com
+DOMAIN,api.anthropic.com
+
+# Gemini app
+DOMAIN,gemini.google.com
+DOMAIN-SUFFIX,gemini.google
+DOMAIN,generativelanguage.googleapis.com
+DOMAIN-SUFFIX,googleapis.com
+DOMAIN,accounts.google.com
+
+# Genspark
+DOMAIN-SUFFIX,genspark.ai
+
+# Manus
+DOMAIN-SUFFIX,manus.im
+DOMAIN,app.manus.im
+DOMAIN,login.manus.im
