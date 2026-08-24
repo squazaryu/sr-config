@@ -19,5 +19,7 @@ jobs:
           python-version: "3.12"
       - name: Validate configs
         run: python3 tools/validate_configs.py
+      - name: Check remote RULE-SET sources
+        run: python3 tools/check_remote_sources.py
       - name: Verify failsafe snapshots
         run: python3 tools/build_failsafe.py --check
