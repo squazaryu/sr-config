@@ -96,6 +96,13 @@ request. CI также проверяет доступность всех уда
 python3 tools/check_remote_sources.py
 ```
 
+Кроме проверки при изменениях, workflow
+`.github/workflows/monitor-remote-sources.yml` запускается ежедневно в 09:00 по
+Москве и доступен для ручного запуска через GitHub Actions. При недоступности
+источников он сохраняет отчёт и создаёт/обновляет GitHub Issue; после
+восстановления issue закрывается автоматически. Для email/push-уведомлений
+нужно включить Watch/Actions notifications для репозитория.
+
 Первый версионированный baseline — `v1.0.0`; для быстрого отката можно
 использовать, например,
 `https://raw.githubusercontent.com/squazaryu/sr-config/v1.0.0/url-set-ios.conf`.

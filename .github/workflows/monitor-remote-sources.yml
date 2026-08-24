@@ -1,0 +1,131 @@
+name: Monitor remote RULE-SET sources
+
+on:
+  schedule:
+    # 06:00 UTC = 09:00 Europe/Moscow.
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: remote-rule-set-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check remote RULE-SET sources
+        id: remote_check
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 tools/check_remote_sources.py 2>&1 | tee remote-check.log
+
+      - name: Upload failed check report
+        if: steps.remote_check.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: remote-rule-set-check-${{ github.run_id }}
+          path: remote-check.log
+          retention-days: 14
+
+      - name: Open or update monitoring issue
+        if: steps.remote_check.outcome == 'failure'
+        uses: actions/github-script@v7
+        env:
+          REPORT_PATH: remote-check.log
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- sr-config-remote-monitor -->';
+            const title = '[monitor] Remote RULE-SET sources unavailable';
+            const report = fs.readFileSync(process.env.REPORT_PATH, 'utf8').slice(-12000);
+            const { owner, repo } = context.repo;
+            const listParams = { owner, repo, state: 'open', per_page: 100 };
+            const issues = await github.paginate(github.rest.issues.listForRepo, listParams);
+            const issue = issues.find(item => item.title === title);
+            const body = [
+              marker,
+              '## Remote RULE-SET source monitor',
+              '',
+              'The scheduled check detected one or more unavailable or invalid sources.',
+              '',
+              `Run: ${process.env.RUN_URL}`,
+              '',
+              '```text',
+              report,
+              '```',
+            ].join('\n');
+
+            if (!issue) {
+              await github.rest.issues.create({ owner, repo, title, body });
+              core.notice('Created a monitoring issue for the failed source check.');
+            } else {
+              await github.rest.issues.update({ owner, repo, issue_number: issue.number, body });
+              const comments = await github.paginate(
+                github.rest.issues.listComments,
+                { owner, repo, issue_number: issue.number, per_page: 100 },
+              );
+              const monitorComments = comments
+                .filter(comment => comment.body && comment.body.includes(marker))
+                .sort((left, right) => new Date(left.created_at) - new Date(right.created_at));
+              const lastComment = monitorComments[monitorComments.length - 1];
+              const commentAge = lastComment ? Date.now() - Date.parse(lastComment.created_at) : Infinity;
+              if (commentAge >= 24 * 60 * 60 * 1000) {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  body: `${marker}\nThe source check is still failing. Latest run: ${process.env.RUN_URL}`,
+                });
+              }
+              core.notice(`Updated monitoring issue #${issue.number}.`);
+            }
+
+      - name: Close recovered monitoring issue
+        if: steps.remote_check.outcome == 'success'
+        uses: actions/github-script@v7
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        with:
+          script: |
+            const marker = '<!-- sr-config-remote-monitor -->';
+            const title = '[monitor] Remote RULE-SET sources unavailable';
+            const { owner, repo } = context.repo;
+            const issues = await github.paginate(
+              github.rest.issues.listForRepo,
+              { owner, repo, state: 'open', per_page: 100 },
+            );
+            for (const issue of issues.filter(item => item.title === title)) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issue.number,
+                body: `${marker}\nThe remote RULE-SET source check recovered successfully. Run: ${process.env.RUN_URL}`,
+              });
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number: issue.number,
+                state: 'closed',
+              });
+              core.notice(`Closed recovered monitoring issue #${issue.number}.`);
+            }
+
+      - name: Fail monitor after notification
+        if: steps.remote_check.outcome == 'failure'
+        run: exit 1
