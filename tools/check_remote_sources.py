@@ -6,7 +6,9 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 import sys
+import time
 from pathlib import Path
+from http.client import IncompleteRead
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -16,6 +18,7 @@ CONFIG_PATHS = (ROOT / "url-set-ios.conf", ROOT / "url-set-macos.conf")
 FETCH_TIMEOUT = 30
 MAX_SOURCE_BYTES = 16 * 1024 * 1024
 MAX_WORKERS = 8
+RETRY_ATTEMPTS = 3
 USER_AGENT = "sr-config-remote-check/1.0"
 
 
@@ -62,20 +65,32 @@ def collect_sources() -> tuple[dict[str, Source], list[str]]:
     return sources, errors
 
 
-def check_source(source: Source) -> CheckResult:
+def check_source_once(source: Source) -> CheckResult:
     request = Request(source.url, headers={"User-Agent": USER_AGENT})
     try:
         with urlopen(request, timeout=FETCH_TIMEOUT) as response:
             status = getattr(response, "status", 200)
             content_type = response.headers.get_content_type()
+            content_length = response.headers.get("Content-Length")
             payload = response.read(MAX_SOURCE_BYTES + 1)
-    except (HTTPError, URLError, TimeoutError, OSError) as exc:
+    except (HTTPError, URLError, TimeoutError, OSError, IncompleteRead) as exc:
         return CheckResult(source.url, False, f"request failed: {exc}")
 
     if not 200 <= status < 300:
         return CheckResult(source.url, False, f"unexpected HTTP status: {status}")
     if len(payload) > MAX_SOURCE_BYTES:
         return CheckResult(source.url, False, f"response exceeds {MAX_SOURCE_BYTES} bytes")
+    if content_length:
+        try:
+            expected_bytes = int(content_length)
+        except ValueError:
+            return CheckResult(source.url, False, f"invalid Content-Length: {content_length}")
+        if len(payload) != expected_bytes:
+            return CheckResult(
+                source.url,
+                False,
+                f"incomplete response: received {len(payload)} of {expected_bytes} bytes",
+            )
     if content_type == "text/html":
         return CheckResult(source.url, False, "response is HTML, not a rule list")
 
@@ -106,6 +121,19 @@ def check_source(source: Source) -> CheckResult:
         return CheckResult(source.url, False, f"malformed rule(s): {sample}")
 
     return CheckResult(source.url, True, f"HTTP {status}, {rule_count} rules, {len(payload)} bytes")
+
+
+def check_source(source: Source) -> CheckResult:
+    result = CheckResult(source.url, False, "source check did not run")
+    for attempt in range(1, RETRY_ATTEMPTS + 1):
+        result = check_source_once(source)
+        if result.ok or attempt == RETRY_ATTEMPTS:
+            break
+        time.sleep(attempt)
+
+    if not result.ok and RETRY_ATTEMPTS > 1:
+        result.detail = f"{result.detail} after {RETRY_ATTEMPTS} attempts"
+    return result
 
 
 def main() -> int:

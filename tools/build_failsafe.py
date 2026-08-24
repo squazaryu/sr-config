@@ -11,6 +11,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import sys
+import time
+from http.client import IncompleteRead
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -19,6 +21,7 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "url-set-main.conf"
 FETCH_TIMEOUT = 60
+FETCH_ATTEMPTS = 3
 
 APPLE_REAL_IP = (
     "time.*.com,ntp.*.com,*.cloudflareclient.com,time.apple.com,*.ntp.apple.com,"
@@ -68,12 +71,27 @@ SOURCES = (
 
 
 def fetch_source(url: str) -> tuple[str, str]:
-    request = Request(url, headers={"User-Agent": "sr-config-failsafe-builder/1.0"})
-    try:
-        with urlopen(request, timeout=FETCH_TIMEOUT) as response:
-            payload = response.read()
-    except (HTTPError, URLError, TimeoutError) as exc:
-        raise RuntimeError(f"не удалось загрузить {url}: {exc}") from exc
+    payload = b""
+    last_error: Exception | None = None
+    for attempt in range(1, FETCH_ATTEMPTS + 1):
+        request = Request(url, headers={"User-Agent": "sr-config-failsafe-builder/1.0"})
+        try:
+            with urlopen(request, timeout=FETCH_TIMEOUT) as response:
+                payload = response.read()
+                content_length = response.headers.get("Content-Length")
+                if content_length and len(payload) != int(content_length):
+                    raise RuntimeError(
+                        f"неполный ответ: получено {len(payload)} из {content_length} bytes"
+                    )
+            break
+        except (HTTPError, URLError, TimeoutError, OSError, IncompleteRead, ValueError, RuntimeError) as exc:
+            last_error = exc
+            if attempt < FETCH_ATTEMPTS:
+                time.sleep(attempt)
+    else:
+        raise RuntimeError(
+            f"не удалось загрузить {url} после {FETCH_ATTEMPTS} попыток: {last_error}"
+        ) from last_error
 
     text = payload.decode("utf-8-sig", errors="strict")
     probe = text.lstrip().lower()[:512]
