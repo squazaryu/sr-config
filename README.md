@@ -89,6 +89,13 @@ python3 tools/build_failsafe.py --check
 ```
 
 Проверка запускается автоматически в GitHub Actions для каждого push и pull
-request. Первый версионированный baseline — `v1.0.0`; для быстрого отката можно
+request. CI также проверяет доступность всех удалённых `RULE-SET` из iOS/macOS
+конфигов. Проверить это локально можно командой:
+
+```
+python3 tools/check_remote_sources.py
+```
+
+Первый версионированный baseline — `v1.0.0`; для быстрого отката можно
 использовать, например,
 `https://raw.githubusercontent.com/squazaryu/sr-config/v1.0.0/url-set-ios.conf`.
