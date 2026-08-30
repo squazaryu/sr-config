@@ -77,6 +77,11 @@ macOS: https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-macos.
 внешних списков, но без `RULE-SET`, которые требуют сетевой загрузки во время
 работы. При изменении внешних источников обновляй snapshot командами:
 
+Критичные серверы каталога и загрузки watchOS, а также проверки сертификатов
+Apple/DigiCert продублированы непосредственно в трёх конфигах с политикой
+`DIRECT` и расположены до внешних списков. Это сохраняет проверку обновления
+работоспособной даже при временной недоступности `apple.list`.
+
 ```
 python3 tools/build_failsafe.py
 python3 tools/validate_configs.py
