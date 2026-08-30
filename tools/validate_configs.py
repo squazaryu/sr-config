@@ -20,6 +20,24 @@ SECRET_PATTERN = re.compile(
     r"-----BEGIN [^-]*PRIVATE KEY-----|\b(?:password|passwd|secret|access[_-]?token|api[_-]?key)\s*=",
     re.IGNORECASE,
 )
+APPLE_WATCH_DIRECT_RULES = (
+    "DOMAIN,appldnld.apple.com,DIRECT",
+    "DOMAIN,gdmf.apple.com,DIRECT",
+    "DOMAIN,gg.apple.com,DIRECT",
+    "DOMAIN,gs.apple.com,DIRECT",
+    "DOMAIN,mesu.apple.com,DIRECT",
+    "DOMAIN,updates-http.cdn-apple.com,DIRECT",
+    "DOMAIN,updates.cdn-apple.com,DIRECT",
+    "DOMAIN,certs.apple.com,DIRECT",
+    "DOMAIN,crl.apple.com,DIRECT",
+    "DOMAIN,ocsp.apple.com,DIRECT",
+    "DOMAIN,ocsp2.apple.com,DIRECT",
+    "DOMAIN,valid.apple.com,DIRECT",
+    "DOMAIN,crl3.digicert.com,DIRECT",
+    "DOMAIN,crl4.digicert.com,DIRECT",
+    "DOMAIN,ocsp.digicert.com,DIRECT",
+    "DOMAIN,ocsp.digicert.cn,DIRECT",
+)
 
 
 def fail(errors: list[str], message: str) -> None:
@@ -126,6 +144,33 @@ def validate_general(name: str, lines: list[str], errors: list[str]) -> None:
             fail(errors, f"{name}: в [General] отсутствует обязательная настройка: {required}")
 
 
+def validate_apple_watch_rules(name: str, lines: list[str], errors: list[str]) -> None:
+    rule_start = next((index for index, line in enumerate(lines) if line.strip() == "[Rule]"), None)
+    if rule_start is None:
+        return
+    rule_end = next(
+        (index for index in range(rule_start + 1, len(lines)) if lines[index].strip().startswith("[")),
+        len(lines),
+    )
+    rule_lines = [line.strip() for line in lines[rule_start + 1 : rule_end]]
+    for required in APPLE_WATCH_DIRECT_RULES:
+        count = rule_lines.count(required)
+        if count != 1:
+            fail(errors, f"{name}: Apple/watchOS rule должна встречаться ровно один раз: {required} (найдено {count})")
+
+    first_external = next(
+        (index for index in range(rule_start + 1, rule_end) if lines[index].strip().startswith("RULE-SET,https://")),
+        None,
+    )
+    apple_positions = [
+        index for index in range(rule_start + 1, rule_end) if lines[index].strip() in APPLE_WATCH_DIRECT_RULES
+    ]
+    if first_external is not None and len(apple_positions) == len(APPLE_WATCH_DIRECT_RULES):
+        last_apple = max(apple_positions)
+        if last_apple > first_external:
+            fail(errors, f"{name}: Apple/watchOS rules должны находиться до внешних RULE-SET")
+
+
 def validate_sources(name: str, rules: list[tuple[str, list[str], str]], errors: list[str]) -> None:
     for line, fields, _policy in rules:
         if fields[0] != "RULE-SET":
@@ -201,6 +246,7 @@ def main() -> int:
         _groups, rules = validate_structure(name, lines, errors)
         rules_by_name[name] = rules
         validate_general(name, lines, errors)
+        validate_apple_watch_rules(name, lines, errors)
         validate_sources(name, rules, errors)
 
     if lines_by_name["main"]:

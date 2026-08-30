@@ -31,6 +31,25 @@ APPLE_REAL_IP = (
     "*.appstore.com,*.apple-cloudkit.com,*.apple-livephotoskit.com,*.apple-dns.net"
 )
 
+APPLE_WATCH_DIRECT_RULES = (
+    "DOMAIN,appldnld.apple.com,DIRECT",
+    "DOMAIN,gdmf.apple.com,DIRECT",
+    "DOMAIN,gg.apple.com,DIRECT",
+    "DOMAIN,gs.apple.com,DIRECT",
+    "DOMAIN,mesu.apple.com,DIRECT",
+    "DOMAIN,updates-http.cdn-apple.com,DIRECT",
+    "DOMAIN,updates.cdn-apple.com,DIRECT",
+    "DOMAIN,certs.apple.com,DIRECT",
+    "DOMAIN,crl.apple.com,DIRECT",
+    "DOMAIN,ocsp.apple.com,DIRECT",
+    "DOMAIN,ocsp2.apple.com,DIRECT",
+    "DOMAIN,valid.apple.com,DIRECT",
+    "DOMAIN,crl3.digicert.com,DIRECT",
+    "DOMAIN,crl4.digicert.com,DIRECT",
+    "DOMAIN,ocsp.digicert.com,DIRECT",
+    "DOMAIN,ocsp.digicert.cn,DIRECT",
+)
+
 SOURCES = (
     {
         "url": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Telegram/Telegram.list",
@@ -179,6 +198,37 @@ def update_general(lines: list[str]) -> None:
             lines[index] = f"always-real-ip = {APPLE_REAL_IP}"
 
 
+def ensure_apple_watch_rules(lines: list[str]) -> None:
+    marker = "# watchOS / Apple software updates — встроенные правила"
+    if marker in lines:
+        missing = [rule for rule in APPLE_WATCH_DIRECT_RULES if rule not in lines]
+        if missing:
+            raise RuntimeError(
+                "неполный встроенный блок Apple/watchOS: " + ", ".join(missing)
+            )
+        return
+
+    try:
+        anchor = next(i for i, line in enumerate(lines) if line == "DOMAIN-SUFFIX,local,DIRECT")
+    except StopIteration as exc:
+        raise RuntimeError("не найден anchor для встроенных Apple/watchOS правил") from exc
+
+    insert_at = anchor + 1
+    while insert_at < len(lines) and lines[insert_at] == "":
+        insert_at += 1
+    block = [
+        marker,
+        "# Не выносить во внешний RULE-SET: проверка обновления не должна зависеть",
+        "# от загрузки списков из GitHub.",
+        *APPLE_WATCH_DIRECT_RULES[:7],
+        "",
+        "# Проверка сертификатов Apple / DigiCert",
+        *APPLE_WATCH_DIRECT_RULES[7:],
+        "",
+    ]
+    lines[insert_at:insert_at] = block
+
+
 def ensure_apple_rules(lines: list[str]) -> None:
     required = [
         "DOMAIN-SUFFIX,apple-cloudkit.com,DIRECT",
@@ -219,6 +269,7 @@ def build() -> str:
 
     lines = CONFIG_PATH.read_text(encoding="utf-8").splitlines()
     update_general(lines)
+    ensure_apple_watch_rules(lines)
     ensure_apple_rules(lines)
 
     for source in SOURCES:
