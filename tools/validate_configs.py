@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 import re
 import sys
 from pathlib import Path
@@ -116,12 +117,62 @@ def parse_rules(lines: list[str], name: str, errors: list[str]) -> list[tuple[st
     return parsed
 
 
+def canonical_entry(section: str, line: str) -> str:
+    if section == "[Rule]":
+        return ",".join(field.strip() for field in line.split(","))
+    if "=" in line:
+        key, value = line.split("=", 1)
+        return f"{key.strip()}={value.strip()}"
+    return line.strip()
+
+
+def validate_platform_integrity(name: str, lines: list[str], errors: list[str]) -> None:
+    """Reject a duplicated platform profile before it can be published."""
+    section_counts = Counter(
+        line.strip()
+        for line in lines
+        if line.strip().startswith("[") and line.strip().endswith("]")
+    )
+    required_sections = ("[General]", "[Proxy Group]", "[Rule]")
+    if any(section_counts[section] != 1 for section in required_sections):
+        return
+
+    for section in required_sections:
+        entries = [
+            canonical_entry(section, line)
+            for line in meaningful(section_lines(lines, section))
+        ]
+        duplicates = sorted(
+            entry for entry, count in Counter(entries).items() if count > 1
+        )
+        for entry in duplicates:
+            errors.append(f"{name}: дублируется строка в {section}: {entry}")
+
+
 def validate_structure(name: str, lines: list[str], errors: list[str]) -> tuple[set[str], list[tuple[str, list[str], str]]]:
-    for required in ("[General]", "[Rule]"):
-        if required not in {line.strip() for line in lines}:
+    required_sections = (
+        ("[General]", "[Rule]")
+        if name == "main"
+        else ("[General]", "[Proxy Group]", "[Rule]")
+    )
+    section_counts = Counter(
+        line.strip()
+        for line in lines
+        if line.strip().startswith("[") and line.strip().endswith("]")
+    )
+    for required in required_sections:
+        count = section_counts[required]
+        if count == 0:
             fail(errors, f"{name}: отсутствует секция {required}")
+        elif count != 1:
+            fail(
+                errors,
+                f"{name}: секция {required} должна встречаться ровно один раз (найдено {count})",
+            )
     groups = parse_groups(lines, name, errors) if name != "main" else set()
     rules = parse_rules(lines, name, errors)
+    if name != "main":
+        validate_platform_integrity(name, lines, errors)
 
     if name != "main":
         for line, fields, policy in rules:
