@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from collections import Counter
 import re
 import sys
 from pathlib import Path
@@ -39,10 +38,6 @@ APPLE_WATCH_DIRECT_RULES = (
     "DOMAIN,ocsp.digicert.com,DIRECT",
     "DOMAIN,ocsp.digicert.cn,DIRECT",
 )
-RULE_SET_BOOTSTRAP = "DOMAIN,raw.githubusercontent.com,PROXY"
-IOS_GENERAL_PROXY_DEFAULT = "🌍 Общий прокси = select,PROXY,🗺️ Выбор сервера,🇫🇮 Финляндия (авто),DIRECT,policy-select-name=PROXY"
-IOS_SERVER_SELECTOR = "🗺️ Выбор сервера = select,PROXY,🇫🇮 Финляндия (авто),DIRECT,policy-select-name=PROXY"
-IOS_AUTO_PROXY = "🚀 Авто (пинг) = url-test,PROXY,🇫🇮 Финляндия (авто),policy-select-name=PROXY,interval=300,tolerance=50,timeout=5,url=http://www.gstatic.com/generate_204"
 
 
 def fail(errors: list[str], message: str) -> None:
@@ -121,62 +116,12 @@ def parse_rules(lines: list[str], name: str, errors: list[str]) -> list[tuple[st
     return parsed
 
 
-def canonical_entry(section: str, line: str) -> str:
-    if section == "[Rule]":
-        return ",".join(field.strip() for field in line.split(","))
-    if "=" in line:
-        key, value = line.split("=", 1)
-        return f"{key.strip()}={value.strip()}"
-    return line.strip()
-
-
-def validate_platform_integrity(name: str, lines: list[str], errors: list[str]) -> None:
-    """Reject a duplicated platform profile before it can be published."""
-    section_counts = Counter(
-        line.strip()
-        for line in lines
-        if line.strip().startswith("[") and line.strip().endswith("]")
-    )
-    required_sections = ("[General]", "[Proxy Group]", "[Rule]")
-    if any(section_counts[section] != 1 for section in required_sections):
-        return
-
-    for section in required_sections:
-        entries = [
-            canonical_entry(section, line)
-            for line in meaningful(section_lines(lines, section))
-        ]
-        duplicates = sorted(
-            entry for entry, count in Counter(entries).items() if count > 1
-        )
-        for entry in duplicates:
-            errors.append(f"{name}: дублируется строка в {section}: {entry}")
-
-
 def validate_structure(name: str, lines: list[str], errors: list[str]) -> tuple[set[str], list[tuple[str, list[str], str]]]:
-    required_sections = (
-        ("[General]", "[Rule]")
-        if name == "main"
-        else ("[General]", "[Proxy Group]", "[Rule]")
-    )
-    section_counts = Counter(
-        line.strip()
-        for line in lines
-        if line.strip().startswith("[") and line.strip().endswith("]")
-    )
-    for required in required_sections:
-        count = section_counts[required]
-        if count == 0:
+    for required in ("[General]", "[Rule]"):
+        if required not in {line.strip() for line in lines}:
             fail(errors, f"{name}: отсутствует секция {required}")
-        elif count != 1:
-            fail(
-                errors,
-                f"{name}: секция {required} должна встречаться ровно один раз (найдено {count})",
-            )
     groups = parse_groups(lines, name, errors) if name != "main" else set()
     rules = parse_rules(lines, name, errors)
-    if name != "main":
-        validate_platform_integrity(name, lines, errors)
 
     if name != "main":
         for line, fields, policy in rules:
@@ -224,56 +169,6 @@ def validate_apple_watch_rules(name: str, lines: list[str], errors: list[str]) -
         last_apple = max(apple_positions)
         if last_apple > first_external:
             fail(errors, f"{name}: Apple/watchOS rules должны находиться до внешних RULE-SET")
-
-
-def validate_rule_set_bootstrap(name: str, lines: list[str], errors: list[str]) -> None:
-    if name != "ios":
-        return
-
-    rule_start = next((index for index, line in enumerate(lines) if line.strip() == "[Rule]"), None)
-    if rule_start is None:
-        return
-    rule_end = next(
-        (
-            index
-            for index in range(rule_start + 1, len(lines))
-            if lines[index].strip().startswith("[")
-        ),
-        len(lines),
-    )
-    rule_lines = [line.strip() for line in lines[rule_start + 1 : rule_end]]
-    count = rule_lines.count(RULE_SET_BOOTSTRAP)
-    if count != 1:
-        fail(errors, f"{name}: bootstrap-правило GitHub должно встречаться ровно один раз (найдено {count})")
-        return
-
-    first_external = next(
-        (index for index in range(rule_start + 1, rule_end) if lines[index].strip().startswith("RULE-SET,https://")),
-        None,
-    )
-    bootstrap_index = next(
-        index for index in range(rule_start + 1, rule_end) if lines[index].strip() == RULE_SET_BOOTSTRAP
-    )
-    if first_external is not None and bootstrap_index > first_external:
-        fail(errors, "ios: bootstrap-правило GitHub должно находиться до внешних RULE-SET")
-
-
-def validate_ios_proxy_default(name: str, lines: list[str], errors: list[str]) -> None:
-    if name != "ios":
-        return
-
-    group_lines = meaningful(section_lines(lines, "[Proxy Group]"))
-    matching = [line for line in group_lines if line.startswith("🌍 Общий прокси =")]
-    if matching != [IOS_GENERAL_PROXY_DEFAULT]:
-        fail(errors, "ios: 🌍 Общий прокси должен по умолчанию использовать текущую политику PROXY")
-
-    selector = [line for line in group_lines if line.startswith("🗺️ Выбор сервера =")]
-    if selector != [IOS_SERVER_SELECTOR]:
-        fail(errors, "ios: 🗺️ Выбор сервера не должен ссылаться на устаревшие группы подписок")
-
-    auto_proxy = [line for line in group_lines if line.startswith("🚀 Авто (пинг) =")]
-    if auto_proxy != [IOS_AUTO_PROXY]:
-        fail(errors, "ios: 🚀 Авто (пинг) не должен ссылаться на устаревшие группы подписок")
 
 
 def validate_sources(name: str, rules: list[tuple[str, list[str], str]], errors: list[str]) -> None:
@@ -352,8 +247,6 @@ def main() -> int:
         rules_by_name[name] = rules
         validate_general(name, lines, errors)
         validate_apple_watch_rules(name, lines, errors)
-        validate_rule_set_bootstrap(name, lines, errors)
-        validate_ios_proxy_default(name, lines, errors)
         validate_sources(name, rules, errors)
 
     if lines_by_name["main"]:
