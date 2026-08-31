@@ -52,6 +52,11 @@ APPLE_WATCH_DIRECT_RULES = (
 
 SOURCES = (
     {
+        "url": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/YouTube/YouTube.list",
+        "policy": "🇫🇮 Финляндия",
+        "options": (),
+    },
+    {
         "url": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Telegram/Telegram.list",
         "policy": "🇫🇮 Финляндия",
         "options": (),

@@ -15,7 +15,7 @@ CONFIGS = {
     "macos": ROOT / "url-set-macos.conf",
 }
 BUILTIN_POLICIES = {"DIRECT", "PROXY", "REJECT", "PASS", "DROP"}
-REQUIRED_EXTERNAL_SNAPSHOTS = 7
+REQUIRED_EXTERNAL_SNAPSHOTS = 8
 SECRET_PATTERN = re.compile(
     r"-----BEGIN [^-]*PRIVATE KEY-----|\b(?:password|passwd|secret|access[_-]?token|api[_-]?key)\s*=",
     re.IGNORECASE,
@@ -37,6 +37,40 @@ APPLE_WATCH_DIRECT_RULES = (
     "DOMAIN,crl4.digicert.com,DIRECT",
     "DOMAIN,ocsp.digicert.com,DIRECT",
     "DOMAIN,ocsp.digicert.cn,DIRECT",
+)
+GITHUB_DIRECT_DOMAINS = (
+    "github.com",
+    "githubusercontent.com",
+    "github.io",
+    "githubassets.com",
+    "githubcopilot.com",
+    "github.dev",
+    "ghcr.io",
+)
+IOS_SERVICE_GROUPS = (
+    "▶️ YouTube = select,PROXY,🇫🇮 Финляндия (авто),🗺️ Выбор сервера,DIRECT,policy-select-name=PROXY",
+    "📸 Instagram = select,PROXY,🇫🇮 Финляндия (авто),🗺️ Выбор сервера,DIRECT,policy-select-name=PROXY",
+)
+IOS_YOUTUBE_CRITICAL_RULES = (
+    "DOMAIN-SUFFIX,youtube.com,▶️ YouTube",
+    "DOMAIN-SUFFIX,ytimg.com,▶️ YouTube",
+    "DOMAIN-SUFFIX,googlevideo.com,▶️ YouTube",
+    "DOMAIN-SUFFIX,googleusercontent.com,▶️ YouTube",
+    "DOMAIN,youtubei.googleapis.com,▶️ YouTube",
+    "IP-CIDR6,2620:120:e000::/40,▶️ YouTube,no-resolve",
+)
+IOS_INSTAGRAM_CRITICAL_RULES = (
+    "DOMAIN-SUFFIX,instagram.com,📸 Instagram",
+    "DOMAIN-SUFFIX,cdninstagram.com,📸 Instagram",
+    "DOMAIN-SUFFIX,facebook.com,📸 Instagram",
+    "DOMAIN-SUFFIX,fbcdn.net,📸 Instagram",
+    "IP-ASN,32934,📸 Instagram,no-resolve",
+    "IP-ASN,63293,📸 Instagram,no-resolve",
+    "IP-CIDR6,2a03:2880::/32,📸 Instagram,no-resolve",
+)
+YOUTUBE_SOURCE = (
+    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/"
+    "rule/Shadowrocket/YouTube/YouTube.list"
 )
 
 
@@ -238,6 +272,46 @@ def validate_special_cases(lines_by_name: dict[str, list[str]], errors: list[str
                 fail(errors, f"{name}: возможный секрет в строке {line_number}")
 
 
+def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: list[str]) -> None:
+    ios_lines = [line.strip() for line in lines_by_name["ios"]]
+    main_lines = [line.strip() for line in lines_by_name["main"]]
+
+    for group in IOS_SERVICE_GROUPS:
+        if ios_lines.count(group) != 1:
+            fail(errors, f"ios: обязательная service group должна встречаться ровно один раз: {group}")
+
+    if any(line.startswith("🐙 GitHub =") for line in ios_lines):
+        fail(errors, "ios: GitHub должен использовать явный DIRECT без сохраняемой select-группы")
+
+    github_ios = [f"DOMAIN-SUFFIX,{domain},DIRECT" for domain in GITHUB_DIRECT_DOMAINS]
+    github_main = list(github_ios)
+    required_ios = github_ios + list(IOS_YOUTUBE_CRITICAL_RULES) + list(IOS_INSTAGRAM_CRITICAL_RULES)
+    for rule in required_ios:
+        if ios_lines.count(rule) != 1:
+            fail(errors, f"ios: критичное service rule должно встречаться ровно один раз: {rule}")
+    for rule in github_main:
+        if main_lines.count(rule) != 1:
+            fail(errors, f"main: GitHub DIRECT rule должно встречаться ровно один раз: {rule}")
+    for ios_rule in (*IOS_YOUTUBE_CRITICAL_RULES, *IOS_INSTAGRAM_CRITICAL_RULES):
+        main_rule = ios_rule.replace("▶️ YouTube", "🇫🇮 Финляндия").replace(
+            "📸 Instagram", "🇫🇮 Финляндия"
+        )
+        if main_rule not in main_lines:
+            fail(errors, f"main: failsafe не содержит обязательное service rule: {main_rule}")
+
+    source_rule = f"RULE-SET,{YOUTUBE_SOURCE},▶️ YouTube"
+    if ios_lines.count(source_rule) != 1:
+        fail(errors, f"ios: полный YouTube RULE-SET должен встречаться ровно один раз: {source_rule}")
+
+    first_external = next(
+        (index for index, line in enumerate(ios_lines) if line.startswith("RULE-SET,https://")),
+        None,
+    )
+    positions = [ios_lines.index(rule) for rule in required_ios if rule in ios_lines]
+    if first_external is not None and len(positions) == len(required_ios) and max(positions) > first_external:
+        fail(errors, "ios: встроенные GitHub/YouTube/Instagram rules должны находиться до внешних RULE-SET")
+
+
 def main() -> int:
     errors: list[str] = []
     lines_by_name = {name: read_config(path, errors) for name, path in CONFIGS.items()}
@@ -253,6 +327,7 @@ def main() -> int:
         validate_local_lists(rules_by_name["main"], errors)
         validate_failsafe(lines_by_name["main"], rules_by_name["main"], errors)
     validate_special_cases(lines_by_name, errors)
+    validate_ios_service_routes(lines_by_name, errors)
 
     if errors:
         for error in errors:
