@@ -48,25 +48,26 @@ GITHUB_DIRECT_DOMAINS = (
     "ghcr.io",
 )
 IOS_SERVICE_GROUPS = (
-    "▶️ YouTube = select,PROXY,🇫🇮 Финляндия (авто),🗺️ Выбор сервера,DIRECT,policy-select-name=PROXY",
-    "📸 Instagram = select,PROXY,🇫🇮 Финляндия (авто),🗺️ Выбор сервера,DIRECT,policy-select-name=PROXY",
+    "📺 YouTube = select,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🗺️ ВЫБОР СЕРВЕРА",
+    "📱 Instagram = select,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🗺️ ВЫБОР СЕРВЕРА",
 )
+LEGACY_IOS_SERVICE_GROUPS = ("▶️ YouTube =", "📸 Instagram =")
 IOS_YOUTUBE_CRITICAL_RULES = (
-    "DOMAIN-SUFFIX,youtube.com,▶️ YouTube",
-    "DOMAIN-SUFFIX,ytimg.com,▶️ YouTube",
-    "DOMAIN-SUFFIX,googlevideo.com,▶️ YouTube",
-    "DOMAIN-SUFFIX,googleusercontent.com,▶️ YouTube",
-    "DOMAIN,youtubei.googleapis.com,▶️ YouTube",
-    "IP-CIDR6,2620:120:e000::/40,▶️ YouTube,no-resolve",
+    "DOMAIN-SUFFIX,youtube.com,📺 YouTube",
+    "DOMAIN-SUFFIX,ytimg.com,📺 YouTube",
+    "DOMAIN-SUFFIX,googlevideo.com,📺 YouTube",
+    "DOMAIN-SUFFIX,googleusercontent.com,📺 YouTube",
+    "DOMAIN,youtubei.googleapis.com,📺 YouTube",
+    "IP-CIDR6,2620:120:e000::/40,📺 YouTube,no-resolve",
 )
 IOS_INSTAGRAM_CRITICAL_RULES = (
-    "DOMAIN-SUFFIX,instagram.com,📸 Instagram",
-    "DOMAIN-SUFFIX,cdninstagram.com,📸 Instagram",
-    "DOMAIN-SUFFIX,facebook.com,📸 Instagram",
-    "DOMAIN-SUFFIX,fbcdn.net,📸 Instagram",
-    "IP-ASN,32934,📸 Instagram,no-resolve",
-    "IP-ASN,63293,📸 Instagram,no-resolve",
-    "IP-CIDR6,2a03:2880::/32,📸 Instagram,no-resolve",
+    "DOMAIN-SUFFIX,instagram.com,📱 Instagram",
+    "DOMAIN-SUFFIX,cdninstagram.com,📱 Instagram",
+    "DOMAIN-SUFFIX,facebook.com,📱 Instagram",
+    "DOMAIN-SUFFIX,fbcdn.net,📱 Instagram",
+    "IP-ASN,32934,📱 Instagram,no-resolve",
+    "IP-ASN,63293,📱 Instagram,no-resolve",
+    "IP-CIDR6,2a03:2880::/32,📱 Instagram,no-resolve",
 )
 YOUTUBE_SOURCE = (
     "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/"
@@ -280,6 +281,10 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
         if ios_lines.count(group) != 1:
             fail(errors, f"ios: обязательная service group должна встречаться ровно один раз: {group}")
 
+    for prefix in LEGACY_IOS_SERVICE_GROUPS:
+        if any(line.startswith(prefix) for line in ios_lines):
+            fail(errors, f"ios: устаревшая service group не должна сохраняться: {prefix}")
+
     if any(line.startswith("🐙 GitHub =") for line in ios_lines):
         fail(errors, "ios: GitHub должен использовать явный DIRECT без сохраняемой select-группы")
 
@@ -293,13 +298,13 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
         if main_lines.count(rule) != 1:
             fail(errors, f"main: GitHub DIRECT rule должно встречаться ровно один раз: {rule}")
     for ios_rule in (*IOS_YOUTUBE_CRITICAL_RULES, *IOS_INSTAGRAM_CRITICAL_RULES):
-        main_rule = ios_rule.replace("▶️ YouTube", "🇫🇮 Финляндия").replace(
-            "📸 Instagram", "🇫🇮 Финляндия"
+        main_rule = ios_rule.replace("📺 YouTube", "🇫🇮 Финляндия").replace(
+            "📱 Instagram", "🇫🇮 Финляндия"
         )
         if main_rule not in main_lines:
             fail(errors, f"main: failsafe не содержит обязательное service rule: {main_rule}")
 
-    source_rule = f"RULE-SET,{YOUTUBE_SOURCE},▶️ YouTube"
+    source_rule = f"RULE-SET,{YOUTUBE_SOURCE},📺 YouTube"
     if ios_lines.count(source_rule) != 1:
         fail(errors, f"ios: полный YouTube RULE-SET должен встречаться ровно один раз: {source_rule}")
 
