@@ -39,6 +39,10 @@ APPLE_WATCH_DIRECT_RULES = (
     "DOMAIN,ocsp.digicert.com,DIRECT",
     "DOMAIN,ocsp.digicert.cn,DIRECT",
 )
+RULE_SET_BOOTSTRAP = "DOMAIN,raw.githubusercontent.com,PROXY"
+IOS_GENERAL_PROXY_DEFAULT = "🌍 Общий прокси = select,PROXY,🗺️ Выбор сервера,🇫🇮 Финляндия (авто),DIRECT,policy-select-name=PROXY"
+IOS_SERVER_SELECTOR = "🗺️ Выбор сервера = select,PROXY,🇫🇮 Финляндия (авто),DIRECT,policy-select-name=PROXY"
+IOS_AUTO_PROXY = "🚀 Авто (пинг) = url-test,PROXY,🇫🇮 Финляндия (авто),policy-select-name=PROXY,interval=300,tolerance=50,timeout=5,url=http://www.gstatic.com/generate_204"
 
 
 def fail(errors: list[str], message: str) -> None:
@@ -222,6 +226,56 @@ def validate_apple_watch_rules(name: str, lines: list[str], errors: list[str]) -
             fail(errors, f"{name}: Apple/watchOS rules должны находиться до внешних RULE-SET")
 
 
+def validate_rule_set_bootstrap(name: str, lines: list[str], errors: list[str]) -> None:
+    if name != "ios":
+        return
+
+    rule_start = next((index for index, line in enumerate(lines) if line.strip() == "[Rule]"), None)
+    if rule_start is None:
+        return
+    rule_end = next(
+        (
+            index
+            for index in range(rule_start + 1, len(lines))
+            if lines[index].strip().startswith("[")
+        ),
+        len(lines),
+    )
+    rule_lines = [line.strip() for line in lines[rule_start + 1 : rule_end]]
+    count = rule_lines.count(RULE_SET_BOOTSTRAP)
+    if count != 1:
+        fail(errors, f"{name}: bootstrap-правило GitHub должно встречаться ровно один раз (найдено {count})")
+        return
+
+    first_external = next(
+        (index for index in range(rule_start + 1, rule_end) if lines[index].strip().startswith("RULE-SET,https://")),
+        None,
+    )
+    bootstrap_index = next(
+        index for index in range(rule_start + 1, rule_end) if lines[index].strip() == RULE_SET_BOOTSTRAP
+    )
+    if first_external is not None and bootstrap_index > first_external:
+        fail(errors, "ios: bootstrap-правило GitHub должно находиться до внешних RULE-SET")
+
+
+def validate_ios_proxy_default(name: str, lines: list[str], errors: list[str]) -> None:
+    if name != "ios":
+        return
+
+    group_lines = meaningful(section_lines(lines, "[Proxy Group]"))
+    matching = [line for line in group_lines if line.startswith("🌍 Общий прокси =")]
+    if matching != [IOS_GENERAL_PROXY_DEFAULT]:
+        fail(errors, "ios: 🌍 Общий прокси должен по умолчанию использовать текущую политику PROXY")
+
+    selector = [line for line in group_lines if line.startswith("🗺️ Выбор сервера =")]
+    if selector != [IOS_SERVER_SELECTOR]:
+        fail(errors, "ios: 🗺️ Выбор сервера не должен ссылаться на устаревшие группы подписок")
+
+    auto_proxy = [line for line in group_lines if line.startswith("🚀 Авто (пинг) =")]
+    if auto_proxy != [IOS_AUTO_PROXY]:
+        fail(errors, "ios: 🚀 Авто (пинг) не должен ссылаться на устаревшие группы подписок")
+
+
 def validate_sources(name: str, rules: list[tuple[str, list[str], str]], errors: list[str]) -> None:
     for line, fields, _policy in rules:
         if fields[0] != "RULE-SET":
@@ -298,6 +352,8 @@ def main() -> int:
         rules_by_name[name] = rules
         validate_general(name, lines, errors)
         validate_apple_watch_rules(name, lines, errors)
+        validate_rule_set_bootstrap(name, lines, errors)
+        validate_ios_proxy_default(name, lines, errors)
         validate_sources(name, rules, errors)
 
     if lines_by_name["main"]:
