@@ -50,9 +50,9 @@ GITHUB_DIRECT_DOMAINS = (
 IOS_QUIC_SETTING = "block-quic = all-proxy"
 IOS_SERVICE_GROUPS = (
     "📺 YouTube = select,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🗺️ ВЫБОР СЕРВЕРА",
-    "📱 Instagram = select,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🗺️ ВЫБОР СЕРВЕРА",
+    "📱 Instagram (один узел) = select,🇵🇱 ALL VPN | Польша,🇦🇹 ALL VPN | Австрия,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🇵🇱 ALL VPN | Польша",
 )
-LEGACY_IOS_SERVICE_GROUPS = ("▶️ YouTube =", "📸 Instagram =")
+LEGACY_IOS_SERVICE_GROUPS = ("▶️ YouTube =", "📸 Instagram =", "📱 Instagram =")
 IOS_YOUTUBE_CRITICAL_RULES = (
     "DOMAIN-SUFFIX,youtube.com,📺 YouTube",
     "DOMAIN-SUFFIX,ytimg.com,📺 YouTube",
@@ -62,13 +62,13 @@ IOS_YOUTUBE_CRITICAL_RULES = (
     "IP-CIDR6,2620:120:e000::/40,📺 YouTube,no-resolve",
 )
 IOS_INSTAGRAM_CRITICAL_RULES = (
-    "DOMAIN-SUFFIX,instagram.com,📱 Instagram",
-    "DOMAIN-SUFFIX,cdninstagram.com,📱 Instagram",
-    "DOMAIN-SUFFIX,facebook.com,📱 Instagram",
-    "DOMAIN-SUFFIX,fbcdn.net,📱 Instagram",
-    "IP-ASN,32934,📱 Instagram,no-resolve",
-    "IP-ASN,63293,📱 Instagram,no-resolve",
-    "IP-CIDR6,2a03:2880::/32,📱 Instagram,no-resolve",
+    "DOMAIN-SUFFIX,instagram.com,📱 Instagram (один узел)",
+    "DOMAIN-SUFFIX,cdninstagram.com,📱 Instagram (один узел)",
+    "DOMAIN-SUFFIX,facebook.com,📱 Instagram (один узел)",
+    "DOMAIN-SUFFIX,fbcdn.net,📱 Instagram (один узел)",
+    "IP-ASN,32934,📱 Instagram (один узел),no-resolve",
+    "IP-ASN,63293,📱 Instagram (один узел),no-resolve",
+    "IP-CIDR6,2a03:2880::/32,📱 Instagram (один узел),no-resolve",
 )
 YOUTUBE_SOURCE = (
     "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/"
@@ -304,7 +304,7 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
             fail(errors, f"main: GitHub DIRECT rule должно встречаться ровно один раз: {rule}")
     for ios_rule in (*IOS_YOUTUBE_CRITICAL_RULES, *IOS_INSTAGRAM_CRITICAL_RULES):
         main_rule = ios_rule.replace("📺 YouTube", "🇫🇮 Финляндия").replace(
-            "📱 Instagram", "🇫🇮 Финляндия"
+            "📱 Instagram (один узел)", "🇫🇮 Финляндия"
         )
         if main_rule not in main_lines:
             fail(errors, f"main: failsafe не содержит обязательное service rule: {main_rule}")
