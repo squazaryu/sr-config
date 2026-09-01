@@ -50,9 +50,13 @@ GITHUB_DIRECT_DOMAINS = (
 IOS_QUIC_SETTING = "block-quic = all-proxy"
 IOS_SERVICE_GROUPS = (
     "📺 YouTube = select,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🗺️ ВЫБОР СЕРВЕРА",
-    "📱 Instagram (один узел) = select,🇵🇱 ALL VPN | Польша,🇦🇹 ALL VPN | Австрия,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🇵🇱 ALL VPN | Польша",
 )
-LEGACY_IOS_SERVICE_GROUPS = ("▶️ YouTube =", "📸 Instagram =", "📱 Instagram =")
+LEGACY_IOS_SERVICE_GROUPS = (
+    "▶️ YouTube =",
+    "📸 Instagram =",
+    "📱 Instagram =",
+    "📱 Instagram (один узел) =",
+)
 IOS_YOUTUBE_CRITICAL_RULES = (
     "DOMAIN-SUFFIX,youtube.com,📺 YouTube",
     "DOMAIN-SUFFIX,ytimg.com,📺 YouTube",
@@ -62,13 +66,13 @@ IOS_YOUTUBE_CRITICAL_RULES = (
     "IP-CIDR6,2620:120:e000::/40,📺 YouTube,no-resolve",
 )
 IOS_INSTAGRAM_CRITICAL_RULES = (
-    "DOMAIN-SUFFIX,instagram.com,📱 Instagram (один узел)",
-    "DOMAIN-SUFFIX,cdninstagram.com,📱 Instagram (один узел)",
-    "DOMAIN-SUFFIX,facebook.com,📱 Instagram (один узел)",
-    "DOMAIN-SUFFIX,fbcdn.net,📱 Instagram (один узел)",
-    "IP-ASN,32934,📱 Instagram (один узел),no-resolve",
-    "IP-ASN,63293,📱 Instagram (один узел),no-resolve",
-    "IP-CIDR6,2a03:2880::/32,📱 Instagram (один узел),no-resolve",
+    "DOMAIN-SUFFIX,instagram.com,PROXY",
+    "DOMAIN-SUFFIX,cdninstagram.com,PROXY",
+    "DOMAIN-SUFFIX,facebook.com,PROXY",
+    "DOMAIN-SUFFIX,fbcdn.net,PROXY",
+    "IP-ASN,32934,PROXY,no-resolve",
+    "IP-ASN,63293,PROXY,no-resolve",
+    "IP-CIDR6,2a03:2880::/32,PROXY,no-resolve",
 )
 YOUTUBE_SOURCE = (
     "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/"
@@ -227,6 +231,13 @@ def normalized_rule_key(line: str) -> str:
     return ",".join(fields[:2])
 
 
+def with_rule_policy(line: str, policy: str) -> str:
+    fields = [field.strip() for field in line.split(",")]
+    policy_index = 1 if fields[0] == "FINAL" else 2
+    fields[policy_index] = policy
+    return ",".join(fields)
+
+
 def validate_local_lists(main_rules: list[tuple[str, list[str], str]], errors: list[str]) -> None:
     main_keys = {normalized_rule_key(line) for line, _fields, _policy in main_rules}
     for path in sorted((ROOT / "lists").glob("*.list")):
@@ -302,10 +313,12 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     for rule in github_main:
         if main_lines.count(rule) != 1:
             fail(errors, f"main: GitHub DIRECT rule должно встречаться ровно один раз: {rule}")
-    for ios_rule in (*IOS_YOUTUBE_CRITICAL_RULES, *IOS_INSTAGRAM_CRITICAL_RULES):
-        main_rule = ios_rule.replace("📺 YouTube", "🇫🇮 Финляндия").replace(
-            "📱 Instagram (один узел)", "🇫🇮 Финляндия"
-        )
+    for ios_rule in IOS_YOUTUBE_CRITICAL_RULES:
+        main_rule = ios_rule.replace("📺 YouTube", "🇫🇮 Финляндия")
+        if main_rule not in main_lines:
+            fail(errors, f"main: failsafe не содержит обязательное service rule: {main_rule}")
+    for ios_rule in IOS_INSTAGRAM_CRITICAL_RULES:
+        main_rule = with_rule_policy(ios_rule, "🇫🇮 Финляндия")
         if main_rule not in main_lines:
             fail(errors, f"main: failsafe не содержит обязательное service rule: {main_rule}")
 
