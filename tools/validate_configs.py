@@ -49,7 +49,9 @@ GITHUB_DIRECT_DOMAINS = (
 )
 IOS_QUIC_SETTING = "block-quic = all-proxy"
 IOS_SERVICE_GROUPS = (
+    "🎧 Spotify = select,🇫🇮 Финляндия (авто),PROXY,DIRECT,policy-select-name=🇫🇮 Финляндия (авто)",
     "📺 YouTube = select,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🗺️ ВЫБОР СЕРВЕРА",
+    "🗺️ Выбор сервера = select,PREMIUM | ALL IN 1,BASE | ALL IN 1,YOUR-DUREV.COM,policy-select-name=PREMIUM | ALL IN 1",
 )
 LEGACY_IOS_SERVICE_GROUPS = (
     "▶️ YouTube =",
