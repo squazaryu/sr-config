@@ -47,6 +47,7 @@ GITHUB_DIRECT_DOMAINS = (
     "github.dev",
     "ghcr.io",
 )
+IOS_QUIC_SETTING = "block-quic = all-proxy"
 IOS_SERVICE_GROUPS = (
     "📺 YouTube = select,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🗺️ ВЫБОР СЕРВЕРА",
     "📱 Instagram = select,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🗺️ ВЫБОР СЕРВЕРА",
@@ -275,7 +276,11 @@ def validate_special_cases(lines_by_name: dict[str, list[str]], errors: list[str
 
 def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: list[str]) -> None:
     ios_lines = [line.strip() for line in lines_by_name["ios"]]
+    ios_general = meaningful(section_lines(lines_by_name["ios"], "[General]"))
     main_lines = [line.strip() for line in lines_by_name["main"]]
+
+    if ios_general.count(IOS_QUIC_SETTING) != 1:
+        fail(errors, f"ios: в General должен быть ровно один transport setting: {IOS_QUIC_SETTING}")
 
     for group in IOS_SERVICE_GROUPS:
         if ios_lines.count(group) != 1:
