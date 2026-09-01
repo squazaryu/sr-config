@@ -52,7 +52,6 @@ IOS_QUIC_SETTING = "block-quic = always-allow"
 IOS_SERVICE_GROUPS = (
     "🎧 Spotify = select,🇫🇮 Финляндия (авто),PROXY,DIRECT,policy-select-name=🇫🇮 Финляндия (авто)",
     "📺 YouTube = select,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🗺️ ВЫБОР СЕРВЕРА",
-    "🪶 Feather = select,PROXY,🇫🇮 Финляндия (авто),DIRECT,🗺️ Выбор сервера,policy-select-name=PROXY",
     "🗺️ Выбор сервера = select,PREMIUM | ALL IN 1,BASE | ALL IN 1,YOUR-DUREV.COM,policy-select-name=PREMIUM | ALL IN 1",
 )
 LEGACY_IOS_SERVICE_GROUPS = (
@@ -60,6 +59,7 @@ LEGACY_IOS_SERVICE_GROUPS = (
     "📸 Instagram =",
     "📱 Instagram =",
     "📱 Instagram (один узел) =",
+    "🪶 Feather =",
 )
 IOS_YOUTUBE_CRITICAL_RULES = (
     "DOMAIN-SUFFIX,youtube.com,📺 YouTube",
@@ -100,23 +100,9 @@ IOS_INSTAGRAM_CRITICAL_RULES = (
     "IP-ASN,63293,🗺️ Выбор сервера,no-resolve",
     "IP-CIDR6,2a03:2880::/32,🗺️ Выбор сервера,no-resolve",
 )
-IOS_FEATHER_DIRECT_RULES = (
+IOS_IAPPS_DIRECT_RULES = (
     "DOMAIN-SUFFIX,rejail.ru,DIRECT",
 )
-IOS_FEATHER_PROXY_RULES = tuple(
-    f"DOMAIN-SUFFIX,{domain},🪶 Feather"
-    for domain in (
-        "getutm.app",
-        "fastsign.dev",
-        "apptesters.org",
-        "hottubapp.io",
-        "pokemmo.com",
-        "stikdebug.xyz",
-        "catbox.moe",
-        "idownloadblog.com",
-    )
-)
-IOS_FEATHER_CRITICAL_RULES = IOS_FEATHER_DIRECT_RULES + IOS_FEATHER_PROXY_RULES
 YOUTUBE_SOURCE = (
     "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/"
     "rule/Shadowrocket/YouTube/YouTube.list"
@@ -365,7 +351,7 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     github_main = list(github_ios)
     required_ios = (
         github_ios
-        + list(IOS_FEATHER_CRITICAL_RULES)
+        + list(IOS_IAPPS_DIRECT_RULES)
         + list(IOS_YOUTUBE_CRITICAL_RULES)
         + list(IOS_INSTAGRAM_CRITICAL_RULES)
     )
@@ -375,13 +361,9 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     for rule in github_main:
         if main_lines.count(rule) != 1:
             fail(errors, f"main: GitHub DIRECT rule должно встречаться ровно один раз: {rule}")
-    for ios_rule in IOS_FEATHER_DIRECT_RULES:
+    for ios_rule in IOS_IAPPS_DIRECT_RULES:
         if ios_rule not in main_lines:
-            fail(errors, f"main: failsafe не содержит Feather DIRECT rule: {ios_rule}")
-    for ios_rule in IOS_FEATHER_PROXY_RULES:
-        main_rule = with_rule_policy(ios_rule, "PROXY")
-        if main_rule not in main_lines:
-            fail(errors, f"main: failsafe не содержит Feather proxy rule: {main_rule}")
+            fail(errors, f"main: failsafe не содержит iApps DIRECT rule: {ios_rule}")
     for ios_rule in IOS_YOUTUBE_CRITICAL_RULES:
         main_rule = ios_rule.replace("📺 YouTube", "🇫🇮 Финляндия")
         if main_rule not in main_lines:
@@ -401,7 +383,7 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     )
     positions = [ios_lines.index(rule) for rule in required_ios if rule in ios_lines]
     if first_external is not None and len(positions) == len(required_ios) and max(positions) > first_external:
-        fail(errors, "ios: встроенные GitHub/Feather/YouTube/Instagram rules должны находиться до внешних RULE-SET")
+        fail(errors, "ios: встроенные GitHub/iApps/YouTube/Instagram rules должны находиться до внешних RULE-SET")
 
 
 def main() -> int:
