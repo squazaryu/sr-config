@@ -47,7 +47,7 @@ GITHUB_DIRECT_DOMAINS = (
     "github.dev",
     "ghcr.io",
 )
-IOS_QUIC_SETTING = "block-quic = all-proxy"
+IOS_QUIC_SETTING = "block-quic = always-allow"
 IOS_SERVICE_GROUPS = (
     "🎧 Spotify = select,🇫🇮 Финляндия (авто),PROXY,DIRECT,policy-select-name=🇫🇮 Финляндия (авто)",
     "📺 YouTube = select,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🗺️ ВЫБОР СЕРВЕРА",
@@ -67,14 +67,36 @@ IOS_YOUTUBE_CRITICAL_RULES = (
     "DOMAIN,youtubei.googleapis.com,📺 YouTube",
     "IP-CIDR6,2620:120:e000::/40,📺 YouTube,no-resolve",
 )
+IOS_YOUTUBE_QUIC_RULES = tuple(
+    f"AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,{domain})),REJECT-NO-DROP"
+    for domain in (
+        "youtube.com",
+        "youtu.be",
+        "youtube-nocookie.com",
+        "youtubeeducation.com",
+        "youtubegaming.com",
+        "youtubekids.com",
+        "yt.be",
+        "ytimg.com",
+        "googlevideo.com",
+        "googleusercontent.com",
+        "ggpht.com",
+        "gvt1.com",
+        "gvt2.com",
+        "video.google.com",
+        "youtube.googleapis.com",
+        "youtubei.googleapis.com",
+        "youtubeembeddedplayer.googleapis.com",
+    )
+)
 IOS_INSTAGRAM_CRITICAL_RULES = (
-    "DOMAIN-SUFFIX,instagram.com,PROXY",
-    "DOMAIN-SUFFIX,cdninstagram.com,PROXY",
-    "DOMAIN-SUFFIX,facebook.com,PROXY",
-    "DOMAIN-SUFFIX,fbcdn.net,PROXY",
-    "IP-ASN,32934,PROXY,no-resolve",
-    "IP-ASN,63293,PROXY,no-resolve",
-    "IP-CIDR6,2a03:2880::/32,PROXY,no-resolve",
+    "DOMAIN-SUFFIX,instagram.com,🗺️ Выбор сервера",
+    "DOMAIN-SUFFIX,cdninstagram.com,🗺️ Выбор сервера",
+    "DOMAIN-SUFFIX,facebook.com,🗺️ Выбор сервера",
+    "DOMAIN-SUFFIX,fbcdn.net,🗺️ Выбор сервера",
+    "IP-ASN,32934,🗺️ Выбор сервера,no-resolve",
+    "IP-ASN,63293,🗺️ Выбор сервера,no-resolve",
+    "IP-CIDR6,2a03:2880::/32,🗺️ Выбор сервера,no-resolve",
 )
 YOUTUBE_SOURCE = (
     "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/"
@@ -292,8 +314,9 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     ios_general = meaningful(section_lines(lines_by_name["ios"], "[General]"))
     main_lines = [line.strip() for line in lines_by_name["main"]]
 
-    if ios_general.count(IOS_QUIC_SETTING) != 1:
-        fail(errors, f"ios: в General должен быть ровно один transport setting: {IOS_QUIC_SETTING}")
+    quic_settings = [line for line in ios_general if line.startswith("block-quic")]
+    if quic_settings != [IOS_QUIC_SETTING]:
+        fail(errors, f"ios: ожидался единственный transport setting: {IOS_QUIC_SETTING}")
 
     for group in IOS_SERVICE_GROUPS:
         if ios_lines.count(group) != 1:
@@ -302,6 +325,19 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     for prefix in LEGACY_IOS_SERVICE_GROUPS:
         if any(line.startswith(prefix) for line in ios_lines):
             fail(errors, f"ios: устаревшая service group не должна сохраняться: {prefix}")
+
+    for rule in IOS_YOUTUBE_QUIC_RULES:
+        if ios_lines.count(rule) != 1:
+            fail(errors, f"ios: YouTube QUIC rule должно встречаться ровно один раз: {rule}")
+
+    first_youtube_route = next(
+        (index for index, line in enumerate(ios_lines) if line in IOS_YOUTUBE_CRITICAL_RULES),
+        None,
+    )
+    quic_positions = [ios_lines.index(rule) for rule in IOS_YOUTUBE_QUIC_RULES if rule in ios_lines]
+    if first_youtube_route is not None and len(quic_positions) == len(IOS_YOUTUBE_QUIC_RULES):
+        if max(quic_positions) > first_youtube_route:
+            fail(errors, "ios: YouTube QUIC rules должны находиться до YouTube route rules")
 
     if any(line.startswith("🐙 GitHub =") for line in ios_lines):
         fail(errors, "ios: GitHub должен использовать явный DIRECT без сохраняемой select-группы")
