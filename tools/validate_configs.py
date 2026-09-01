@@ -52,7 +52,7 @@ IOS_QUIC_SETTING = "block-quic = always-allow"
 IOS_SERVICE_GROUPS = (
     "🎧 Spotify = select,🇫🇮 Финляндия (авто),PROXY,DIRECT,policy-select-name=🇫🇮 Финляндия (авто)",
     "📺 YouTube = select,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🗺️ ВЫБОР СЕРВЕРА",
-    "🪶 Feather = select,🇫🇮 Финляндия,DIRECT,🗺️ Выбор сервера,PROXY,policy-select-name=🇫🇮 Финляндия",
+    "🪶 Feather = select,PROXY,🇫🇮 Финляндия (авто),DIRECT,🗺️ Выбор сервера,policy-select-name=PROXY",
     "🗺️ Выбор сервера = select,PREMIUM | ALL IN 1,BASE | ALL IN 1,YOUR-DUREV.COM,policy-select-name=PREMIUM | ALL IN 1",
 )
 LEGACY_IOS_SERVICE_GROUPS = (
@@ -379,7 +379,7 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
         if ios_rule not in main_lines:
             fail(errors, f"main: failsafe не содержит Feather DIRECT rule: {ios_rule}")
     for ios_rule in IOS_FEATHER_PROXY_RULES:
-        main_rule = with_rule_policy(ios_rule, "🇫🇮 Финляндия")
+        main_rule = with_rule_policy(ios_rule, "PROXY")
         if main_rule not in main_lines:
             fail(errors, f"main: failsafe не содержит Feather proxy rule: {main_rule}")
     for ios_rule in IOS_YOUTUBE_CRITICAL_RULES:
