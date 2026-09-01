@@ -49,12 +49,22 @@ GITHUB_DIRECT_DOMAINS = (
     "ghcr.io",
 )
 IOS_QUIC_SETTING = "block-quic = always-allow"
+AI_SOURCE = (
+    "https://raw.githubusercontent.com/squazaryu/sr-config/main/"
+    "lists/ai-services.list"
+)
+IOS_AI_GROUP = "🤖 AI-сервисы (PROXY) = select,PROXY,policy-select-name=PROXY"
+IOS_AI_SOURCE_RULE = (
+    f"RULE-SET,{AI_SOURCE},🤖 AI-сервисы (PROXY),pre-matching,extended-matching"
+)
 IOS_SERVICE_GROUPS = (
+    IOS_AI_GROUP,
     "🎧 Spotify = select,🇫🇮 Финляндия (авто),PROXY,DIRECT,policy-select-name=🇫🇮 Финляндия (авто)",
     "📺 YouTube = select,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🗺️ ВЫБОР СЕРВЕРА",
     "🗺️ Выбор сервера = select,PREMIUM | ALL IN 1,BASE | ALL IN 1,YOUR-DUREV.COM,policy-select-name=PREMIUM | ALL IN 1",
 )
 LEGACY_IOS_SERVICE_GROUPS = (
+    "🤖 AI-сервисы =",
     "▶️ YouTube =",
     "📸 Instagram =",
     "📱 Instagram =",
@@ -358,6 +368,26 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
 
     if any(line.startswith("🐙 GitHub =") for line in ios_lines):
         fail(errors, "ios: GitHub должен использовать явный DIRECT без сохраняемой select-группы")
+
+    if ios_lines.count(IOS_AI_SOURCE_RULE) != 1:
+        fail(
+            errors,
+            "ios: AI RULE-SET должен использовать новую PROXY-группу ровно один раз: "
+            f"{IOS_AI_SOURCE_RULE}",
+        )
+
+    for raw in (ROOT / "lists" / "ai-services.list").read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        fields = [field.strip() for field in line.split(",")]
+        main_rule = ",".join(fields[:2] + ["PROXY", "pre-matching", "extended-matching"])
+        if main_lines.count(main_rule) != 1:
+            fail(
+                errors,
+                "main: AI failsafe rule должна использовать активный PROXY ровно один раз: "
+                f"{main_rule}",
+            )
 
     github_ios = [f"DOMAIN-SUFFIX,{domain},DIRECT" for domain in GITHUB_DIRECT_DOMAINS]
     github_main = list(github_ios)
