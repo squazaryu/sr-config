@@ -23,12 +23,13 @@ CONFIG_PATH = ROOT / "url-set-main.conf"
 FETCH_TIMEOUT = 60
 FETCH_ATTEMPTS = 3
 
-APPLE_REAL_IP = (
+ALWAYS_REAL_IP = (
     "time.*.com,ntp.*.com,*.cloudflareclient.com,time.apple.com,*.ntp.apple.com,"
     "apple.com,icloud.com,icloud-content.com,mzstatic.com,cdn-apple.com,aaplimg.com,"
     "appstore.com,apple-cloudkit.com,apple-livephotoskit.com,apple-dns.net,*.apple.com,"
     "*.icloud.com,*.icloud-content.com,*.mzstatic.com,*.cdn-apple.com,*.aaplimg.com,"
-    "*.appstore.com,*.apple-cloudkit.com,*.apple-livephotoskit.com,*.apple-dns.net"
+    "*.appstore.com,*.apple-cloudkit.com,*.apple-livephotoskit.com,*.apple-dns.net,"
+    "*.backloop.dev"
 )
 
 APPLE_WATCH_DIRECT_RULES = (
@@ -197,10 +198,12 @@ def update_general(lines: list[str]) -> None:
             lines[index] = "# Shadowrocket: self-contained failsafe snapshot"
         elif line.startswith("dns-direct-system ="):
             lines[index] = "dns-direct-system = true"
+        elif line.startswith("skip-proxy =") and "*.backloop.dev" not in line:
+            lines[index] = f"{line},*.backloop.dev"
         elif line.startswith("tun-excluded-routes =") and "17.0.0.0/8" not in line:
             lines[index] = f"{line},17.0.0.0/8"
         elif line.startswith("always-real-ip ="):
-            lines[index] = f"always-real-ip = {APPLE_REAL_IP}"
+            lines[index] = f"always-real-ip = {ALWAYS_REAL_IP}"
 
 
 def ensure_apple_watch_rules(lines: list[str]) -> None:
