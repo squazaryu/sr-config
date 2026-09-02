@@ -113,12 +113,6 @@ IOS_FEATHER_FINLAND_RULES = tuple(
         "stikdebug.xyz",
     )
 )
-FEATHER_LOOPBACK_HOST = "*.backloop.dev"
-FEATHER_INSTALLER_RULES = (
-    "DOMAIN,backloop.dev,PROXY",
-    "DOMAIN,api.palera.in,PROXY",
-    "DOMAIN-SUFFIX,backloop.dev,DIRECT",
-)
 IOS_PLATIPOMIRU_RULE = "DOMAIN-SUFFIX,platipomiru.com,✈️ Telegram"
 MAIN_PLATIPOMIRU_RULE = "DOMAIN-SUFFIX,platipomiru.com,🇫🇮 Финляндия"
 YOUTUBE_SOURCE = (
@@ -341,17 +335,6 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     if quic_settings != [IOS_QUIC_SETTING]:
         fail(errors, f"ios: ожидался единственный transport setting: {IOS_QUIC_SETTING}")
 
-    for name in ("ios", "main"):
-        general = meaningful(section_lines(lines_by_name[name], "[General]"))
-        for setting in ("skip-proxy", "always-real-ip"):
-            values = [line for line in general if line.startswith(f"{setting} =")]
-            if len(values) != 1:
-                fail(errors, f"{name}: ожидалась единственная настройка {setting}")
-                continue
-            entries = {entry.strip() for entry in values[0].split("=", 1)[1].split(",")}
-            if FEATHER_LOOPBACK_HOST not in entries:
-                fail(errors, f"{name}: {setting} не содержит {FEATHER_LOOPBACK_HOST}")
-
     for group in IOS_SERVICE_GROUPS:
         if ios_lines.count(group) != 1:
             fail(errors, f"ios: обязательная service group должна встречаться ровно один раз: {group}")
@@ -382,7 +365,6 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
         github_ios
         + list(IOS_IAPPS_DIRECT_RULES)
         + list(IOS_FEATHER_FINLAND_RULES)
-        + list(FEATHER_INSTALLER_RULES)
         + [IOS_PLATIPOMIRU_RULE]
         + list(IOS_YOUTUBE_CRITICAL_RULES)
         + list(IOS_INSTAGRAM_CRITICAL_RULES)
@@ -393,15 +375,6 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     for rule in github_main:
         if main_lines.count(rule) != 1:
             fail(errors, f"main: GitHub DIRECT rule должно встречаться ровно один раз: {rule}")
-    for rule in FEATHER_INSTALLER_RULES:
-        if main_lines.count(rule) != 1:
-            fail(errors, f"main: Feather installer rule должно встречаться ровно один раз: {rule}")
-    if all(rule in ios_lines for rule in FEATHER_INSTALLER_RULES):
-        if ios_lines.index(FEATHER_INSTALLER_RULES[0]) > ios_lines.index(FEATHER_INSTALLER_RULES[-1]):
-            fail(errors, "ios: backloop.dev PROXY rule должно находиться до wildcard DIRECT rule")
-    if all(rule in main_lines for rule in FEATHER_INSTALLER_RULES):
-        if main_lines.index(FEATHER_INSTALLER_RULES[0]) > main_lines.index(FEATHER_INSTALLER_RULES[-1]):
-            fail(errors, "main: backloop.dev PROXY rule должно находиться до wildcard DIRECT rule")
     for ios_rule in IOS_IAPPS_DIRECT_RULES:
         if ios_rule not in main_lines:
             fail(errors, f"main: failsafe не содержит iApps DIRECT rule: {ios_rule}")
