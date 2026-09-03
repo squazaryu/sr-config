@@ -51,6 +51,10 @@ Mac переключались раздельно.
 сбрасывает сохранённый выбор предыдущей Telegram-политики. macOS сохраняет
 независимую группу `✈️ Telegram` и прежний порядок выбора.
 
+На iOS погода использует отдельную группу `🌤️ Погода v2` с `PROXY` по
+умолчанию. `DIRECT` и `🇫🇮 Финляндия (авто)` остаются ручными вариантами;
+macOS сохраняет прежнюю независимую погодную группу через Финляндию.
+
 На iOS GitHub-источники Feather сохраняют подтверждённую маршрутизацию
 `DIRECT`, а iApps Store (`rejail.ru`) закреплён через ранний `DIRECT` до
 внешних списков. Подтверждённые сравнительными логами каталоги UTM, FastSign,
@@ -88,7 +92,7 @@ macOS: https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-macos.
 |---|---|---|
 | `lists/ai-services.list` | 🤖 AI-сервисы | OpenAI/ChatGPT, Claude, Gemini, Genspark, Manus |
 | `lists/spotify.list` | 🎧 Spotify | Spotify |
-| `lists/weather.list` | 🌤️ Погода | CARROT Weather / Foreca |
+| `lists/weather.list` | 🌤️ Погода v2 (iOS) / 🌤️ Погода (macOS) | CARROT Weather / Foreca |
 | `lists/telegram-domains.list` | ✈️ Telegram v2 (iOS) / ✈️ Telegram (macOS) | доп. домены Telegram |
 | `lists/telegram-ips.list` | ✈️ Telegram v2 (iOS) / ✈️ Telegram (macOS) | доп. IP-диапазоны Telegram |
 | `lists/ru-direct-domains.list` | DIRECT | Госуслуги, Яндекс, соцсети РФ, маркетплейсы, банки, связь, карты |
