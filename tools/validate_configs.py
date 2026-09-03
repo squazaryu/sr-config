@@ -62,6 +62,10 @@ IOS_STALE_FINLAND_AUTO_POLICIES = (
     "🇫🇮 ФИНЛЯНДИЯ 2",
     "FINLAND 🇫🇮",
 )
+IOS_AI_GROUP = (
+    "🤖 AI-сервисы v2 = select,🇫🇮 ALL VPN | ФИНЛЯНДИЯ,"
+    "🇫🇮 Финляндия (авто),policy-select-name=🇫🇮 ALL VPN | ФИНЛЯНДИЯ"
+)
 IOS_TELEGRAM_GROUP = (
     "✈️ Telegram v2 = select,PROXY,🗺️ Выбор сервера,🇫🇮 Финляндия (авто),"
     "🚀 Авто (пинг),policy-select-name=PROXY"
@@ -72,6 +76,7 @@ IOS_WEATHER_GROUP = (
 )
 IOS_SERVICE_GROUPS = (
     IOS_FINLAND_AUTO_GROUP,
+    IOS_AI_GROUP,
     IOS_TELEGRAM_GROUP,
     IOS_WEATHER_GROUP,
     "🎧 Spotify = select,🇫🇮 Финляндия (авто),PROXY,DIRECT,policy-select-name=🇫🇮 Финляндия (авто)",
@@ -79,6 +84,7 @@ IOS_SERVICE_GROUPS = (
     "🗺️ Выбор сервера = select,PREMIUM | ALL IN 1,BASE | ALL IN 1,YOUR-DUREV.COM,policy-select-name=PREMIUM | ALL IN 1",
 )
 LEGACY_IOS_SERVICE_GROUPS = (
+    "🤖 AI-сервисы =",
     "✈️ Telegram =",
     "🌤️ Погода =",
     "▶️ YouTube =",
@@ -144,6 +150,10 @@ MAIN_PLATIPOMIRU_RULE = "DOMAIN-SUFFIX,platipomiru.com,🇫🇮 Финлянди
 YOUTUBE_SOURCE = (
     "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/"
     "rule/Shadowrocket/YouTube/YouTube.list"
+)
+AI_SOURCE = (
+    "https://raw.githubusercontent.com/squazaryu/sr-config/main/"
+    "lists/ai-services.list"
 )
 WEATHER_SOURCE = (
     "https://raw.githubusercontent.com/squazaryu/sr-config/main/"
@@ -444,6 +454,16 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     source_rule = f"RULE-SET,{YOUTUBE_SOURCE},📺 YouTube"
     if ios_lines.count(source_rule) != 1:
         fail(errors, f"ios: полный YouTube RULE-SET должен встречаться ровно один раз: {source_rule}")
+
+    ai_source_rule = (
+        f"RULE-SET,{AI_SOURCE},🤖 AI-сервисы v2,pre-matching,extended-matching"
+    )
+    if ios_lines.count(ai_source_rule) != 1:
+        fail(
+            errors,
+            "ios: AI RULE-SET должен использовать группу 🤖 AI-сервисы v2 ровно один раз: "
+            f"{ai_source_rule}",
+        )
 
     weather_source_rule = (
         f"RULE-SET,{WEATHER_SOURCE},🌤️ Погода v2,pre-matching,extended-matching"
