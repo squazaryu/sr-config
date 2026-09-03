@@ -57,11 +57,13 @@ Mac переключались раздельно.
 умолчанию. `DIRECT` и `🇫🇮 Финляндия (авто)` остаются ручными вариантами;
 macOS сохраняет прежнюю независимую погодную группу через Финляндию.
 
-На iOS AI-сервисы используют отдельную группу `🤖 AI-сервисы v2`, которая
-по умолчанию закреплена за `🇫🇮 ALL VPN | ФИНЛЯНДИЯ`. Общая финская
-auto-группа доступна только как ручной fallback; обычный `PROXY` в AI-группу
-не входит. macOS и самодостаточный failsafe сохраняют независимую финскую
-маршрутизацию.
+На iOS AI-сервисы используют отдельную группу `🤖 AI-сервисы v3` типа
+`fallback`. Первой используется подтверждённая policy
+`🇫🇮 ALL VPN | ФИНЛЯНДИЯ`; при её недоступности Shadowrocket по порядку
+проверяет остальные шесть policy из iOS-группы `🇫🇮 Финляндия (авто)`.
+Проверка выполняется раз в минуту через домен iOS ChatGPT, а не через общий
+Google endpoint. Обычный `PROXY` в AI-группу не входит. macOS и
+самодостаточный failsafe сохраняют независимую финскую маршрутизацию.
 
 На iOS GitHub-источники Feather сохраняют подтверждённую маршрутизацию
 `DIRECT`, а iApps Store (`rejail.ru`) закреплён через ранний `DIRECT` до
@@ -98,7 +100,7 @@ macOS: https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-macos.
 
 | Файл | Политика | Содержимое |
 |---|---|---|
-| `lists/ai-services.list` | 🤖 AI-сервисы v2 (iOS) / 🤖 AI-сервисы (macOS) | OpenAI/ChatGPT, Claude, Gemini, Genspark, Manus |
+| `lists/ai-services.list` | 🤖 AI-сервисы v3 (iOS) / 🤖 AI-сервисы (macOS) | OpenAI/ChatGPT, Claude, Gemini, Genspark, Manus |
 | `lists/spotify.list` | 🎧 Spotify | Spotify |
 | `lists/weather.list` | 🌤️ Погода v2 (iOS) / 🌤️ Погода (macOS) | CARROT Weather / Foreca |
 | `lists/telegram-domains.list` | ✈️ Telegram v2 (iOS) / ✈️ Telegram (macOS) | доп. домены Telegram |
