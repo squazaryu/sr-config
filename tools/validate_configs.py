@@ -49,12 +49,18 @@ GITHUB_DIRECT_DOMAINS = (
     "ghcr.io",
 )
 IOS_QUIC_SETTING = "block-quic = always-allow"
+IOS_TELEGRAM_GROUP = (
+    "✈️ Telegram v2 = select,PROXY,🗺️ Выбор сервера,🇫🇮 Финляндия (авто),"
+    "🚀 Авто (пинг),policy-select-name=PROXY"
+)
 IOS_SERVICE_GROUPS = (
+    IOS_TELEGRAM_GROUP,
     "🎧 Spotify = select,🇫🇮 Финляндия (авто),PROXY,DIRECT,policy-select-name=🇫🇮 Финляндия (авто)",
     "📺 YouTube = select,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🗺️ ВЫБОР СЕРВЕРА",
     "🗺️ Выбор сервера = select,PREMIUM | ALL IN 1,BASE | ALL IN 1,YOUR-DUREV.COM,policy-select-name=PREMIUM | ALL IN 1",
 )
 LEGACY_IOS_SERVICE_GROUPS = (
+    "✈️ Telegram =",
     "▶️ YouTube =",
     "📸 Instagram =",
     "📱 Instagram =",
@@ -113,7 +119,7 @@ IOS_FEATHER_FINLAND_RULES = tuple(
         "stikdebug.xyz",
     )
 )
-IOS_PLATIPOMIRU_RULE = "DOMAIN-SUFFIX,platipomiru.com,✈️ Telegram"
+IOS_PLATIPOMIRU_RULE = "DOMAIN-SUFFIX,platipomiru.com,✈️ Telegram v2"
 MAIN_PLATIPOMIRU_RULE = "DOMAIN-SUFFIX,platipomiru.com,🇫🇮 Финляндия"
 YOUTUBE_SOURCE = (
     "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/"
