@@ -49,6 +49,19 @@ GITHUB_DIRECT_DOMAINS = (
     "ghcr.io",
 )
 IOS_QUIC_SETTING = "block-quic = always-allow"
+IOS_FINLAND_AUTO_GROUP = (
+    "🇫🇮 Финляндия (авто) = url-test,🇫🇮 PROXY TG | ФИНЛЯНДИЯ,"
+    "🇫🇮 FASTCON VPN | ФИНЛЯНДИЯ,🇫🇮 SODA VPN | ФИНЛЯНДИЯ,"
+    "🇫🇮 HIT VPN | ФИНЛЯНДИЯ,🇫🇮 ALL VPN | ФИНЛЯНДИЯ,"
+    "🇫🇮 ДАРВИН ВПН | ФИНЛЯНДИЯ,🇫🇮 FASTCOM VPN | ФИНЛЯНДИЯ,"
+    "policy-select-name=🇫🇮 PROXY TG | ФИНЛЯНДИЯ,interval=300,"
+    "tolerance=50,timeout=5,url=http://www.gstatic.com/generate_204"
+)
+IOS_STALE_FINLAND_AUTO_POLICIES = (
+    "🇫🇮 ФИНЛЯНДИЯ",
+    "🇫🇮 ФИНЛЯНДИЯ 2",
+    "FINLAND 🇫🇮",
+)
 IOS_TELEGRAM_GROUP = (
     "✈️ Telegram v2 = select,PROXY,🗺️ Выбор сервера,🇫🇮 Финляндия (авто),"
     "🚀 Авто (пинг),policy-select-name=PROXY"
@@ -58,6 +71,7 @@ IOS_WEATHER_GROUP = (
     "policy-select-name=PROXY"
 )
 IOS_SERVICE_GROUPS = (
+    IOS_FINLAND_AUTO_GROUP,
     IOS_TELEGRAM_GROUP,
     IOS_WEATHER_GROUP,
     "🎧 Spotify = select,🇫🇮 Финляндия (авто),PROXY,DIRECT,policy-select-name=🇫🇮 Финляндия (авто)",
@@ -358,6 +372,20 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     for prefix in LEGACY_IOS_SERVICE_GROUPS:
         if any(line.startswith(prefix) for line in ios_lines):
             fail(errors, f"ios: устаревшая service group не должна сохраняться: {prefix}")
+
+    finland_auto_lines = [
+        line for line in ios_lines if line.startswith("🇫🇮 Финляндия (авто) =")
+    ]
+    if len(finland_auto_lines) == 1:
+        fields = [field.strip() for field in finland_auto_lines[0].split("=", 1)[1].split(",")]
+        members = {field for field in fields[1:] if "=" not in field}
+        for stale_policy in IOS_STALE_FINLAND_AUTO_POLICIES:
+            if stale_policy in members:
+                fail(
+                    errors,
+                    "ios: устаревшая policy не должна входить в группу 🇫🇮 Финляндия (авто): "
+                    f"{stale_policy}",
+                )
 
     for rule in IOS_YOUTUBE_QUIC_RULES:
         if ios_lines.count(rule) != 1:
