@@ -63,8 +63,11 @@ IOS_STALE_FINLAND_AUTO_POLICIES = (
     "FINLAND 🇫🇮",
 )
 IOS_AI_GROUP = (
-    "🤖 AI-сервисы v2 = select,🇫🇮 ALL VPN | ФИНЛЯНДИЯ,"
-    "🇫🇮 Финляндия (авто),policy-select-name=🇫🇮 ALL VPN | ФИНЛЯНДИЯ"
+    "🤖 AI-сервисы v2 = url-test,🇫🇮 PROXY TG | ФИНЛЯНДИЯ,"
+    "🇫🇮 ДАРВИН ВПН | ФИНЛЯНДИЯ,🇫🇮 SODA VPN | ФИНЛЯНДИЯ,"
+    "🇫🇮 HIT VPN | ФИНЛЯНДИЯ,🇫🇮 FASTCOM VPN | ФИНЛЯНДИЯ,"
+    "🇫🇮 ALL VPN | ФИНЛЯНДИЯ,policy-select-name=🇫🇮 ДАРВИН ВПН | ФИНЛЯНДИЯ,"
+    "interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
 )
 IOS_TELEGRAM_GROUP = (
     "✈️ Telegram v2 = select,PROXY,🗺️ Выбор сервера,🇫🇮 Финляндия (авто),"
