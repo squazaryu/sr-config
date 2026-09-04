@@ -1,4 +1,4 @@
-"""Guard fixed Finnish routing; these checks do not emulate Shadowrocket."""
+"""Preserve exact F08 settings; the selected server's country is a runtime check."""
 
 import unittest
 from pathlib import Path
@@ -7,12 +7,12 @@ import validate_configs
 
 
 ROOT = Path(__file__).resolve().parents[1]
-AI_GROUP = "🤖 AI-сервисы (ALL VPN FI)"
-GENERAL_GROUP = "🌍 Общий прокси (ALL VPN FI)"
+AI_GROUP = "🤖 AI-сервисы (Финляндия)"
+GENERAL_GROUP = "🌍 Общий прокси"
 FINLAND_NODE = "🇫🇮 ALL VPN | ФИНЛЯНДИЯ"
 FINLAND_GROUP = "🇫🇮 Финляндия (авто)"
-EXPECTED_GROUP = f"{AI_GROUP} = select,{FINLAND_NODE},policy-select-name={FINLAND_NODE}"
-EXPECTED_GENERAL = f"{GENERAL_GROUP} = select,{FINLAND_NODE},policy-select-name={FINLAND_NODE}"
+EXPECTED_GROUP = f"{AI_GROUP} = select,PROXY,policy-select-name=PROXY"
+EXPECTED_GENERAL = f"{GENERAL_GROUP} = select,PROXY,policy-select-name=PROXY"
 EXCEPTION_HOSTS = ("shdnetwork.website", "sub.alvsub.cc", "your-durev.com")
 EXPECTED_RULE = (
     "RULE-SET,https://raw.githubusercontent.com/squazaryu/sr-config/main/"
@@ -29,21 +29,21 @@ class AIRecoveryTests(unittest.TestCase):
     def test_new_ai_group_once(self):
         self.assertEqual(self.ai_groups, [EXPECTED_GROUP])
 
-    def test_ai_general_and_final_share_fixed_finland(self):
+    def test_ai_general_and_final_use_selected_proxy(self):
         self.assertEqual(len(self.ai_groups), 1)
         self.assertEqual(self.lines.count(EXPECTED_GENERAL), 1)
-        self.assertEqual(self.lines.count(f"FINAL,{GENERAL_GROUP}"), 1)
-        self.assertEqual(validate_configs.meaningful(self.lines)[-1], f"FINAL,{GENERAL_GROUP}")
+        self.assertEqual(self.lines.count("FINAL,PROXY"), 1)
+        self.assertEqual(validate_configs.meaningful(self.lines)[-1], "FINAL,PROXY")
 
     def test_macos_keeps_independent_auto_path(self):
         macos_group = next(line for line in self.macos if line.startswith("🤖 AI-сервисы ="))
         self.assertEqual(macos_group.split("=", 1)[1].strip(), f"select, {FINLAND_GROUP}")
         self.assertIn("🎧 Spotify = select, DIRECT", self.macos)
 
-    def test_ai_has_one_fixed_node_without_proxy_or_auto(self):
+    def test_ai_uses_builtin_proxy_without_named_node_or_auto(self):
         self.assertEqual(len(self.ai_groups), 1)
         fields = [part.strip() for part in self.ai_groups[0].split("=", 1)[1].split(",")]
-        self.assertEqual(fields, ["select", FINLAND_NODE, f"policy-select-name={FINLAND_NODE}"])
+        self.assertEqual(fields, ["select", "PROXY", "policy-select-name=PROXY"])
         self.assertEqual(sum(line.startswith(f"{FINLAND_GROUP} =") for line in self.lines), 1)
 
     def test_shared_finland_pool_keeps_seven_approved_candidates(self):
@@ -117,22 +117,23 @@ class AIPathValidationTests(unittest.TestCase):
         validate_configs.validate_ios_service_routes(configs, errors)
         return errors
 
-    def test_validator_accepts_fixed_finland_path(self):
+    def test_validator_accepts_original_f08_path(self):
         self.assertEqual(self.errors_for_group(EXPECTED_GROUP), [])
 
     def test_validator_rejects_other_ai_destinations_and_auto_tests(self):
         changes = (
             ("= select,", "= url-test,"),
             ("= select,", "= fallback,"),
-            (FINLAND_NODE, "PROXY"),
-            (FINLAND_NODE, "DIRECT"),
-            (FINLAND_NODE, FINLAND_GROUP),
-            (FINLAND_NODE, "🇫🇮 ФИНЛЯНДИЯ"),
-            (FINLAND_NODE, f"{FINLAND_NODE},PROXY"),
-            (FINLAND_NODE, f"{FINLAND_NODE},use=true"),
-            (FINLAND_NODE, f"{FINLAND_NODE},interval=600"),
+            ("PROXY", FINLAND_NODE),
+            ("PROXY", "DIRECT"),
+            ("PROXY", FINLAND_GROUP),
+            ("PROXY", "🇫🇮 ФИНЛЯНДИЯ"),
+            ("PROXY", f"PROXY,{FINLAND_NODE}"),
+            ("PROXY", "PROXY,use=true"),
+            ("PROXY", "PROXY,interval=600"),
             (AI_GROUP, "🤖 AI-сервисы v2"),
             (AI_GROUP, "🤖 AI-сервисы v3"),
+            (AI_GROUP, "🤖 AI-сервисы (ALL VPN FI)"),
         )
         for old, new in changes:
             with self.subTest(old=old, new=new):
@@ -140,7 +141,7 @@ class AIPathValidationTests(unittest.TestCase):
                 self.assertTrue(any("🤖 AI-сервисы" in error for error in errors), errors)
 
     def test_validator_rejects_legacy_ai_groups_alongside_new_group(self):
-        for legacy in ("🤖 AI-сервисы", "🤖 AI-сервисы v2", "🤖 AI-сервисы v3", "🤖 AI-сервисы (Финляндия)"):
+        for legacy in ("🤖 AI-сервисы", "🤖 AI-сервисы v2", "🤖 AI-сервисы v3", "🤖 AI-сервисы (ALL VPN FI)"):
             with self.subTest(legacy=legacy):
                 group = EXPECTED_GROUP + f"\n{legacy} = select,PROXY"
                 errors = self.errors_for_group(group)
@@ -155,21 +156,8 @@ class F08PreservationTests(unittest.TestCase):
         self.lines = (ROOT / "url-set-ios.conf").read_text(encoding="utf-8").splitlines()
         self.f08 = (ROOT / "tools/fixtures/ios-f08.conf").read_text(encoding="utf-8").splitlines()
 
-    def test_only_reviewed_f08_policy_replacements(self):
-        expected = []
-        for line in validate_configs.meaningful(self.f08):
-            if line.startswith("🤖 AI-сервисы (Финляндия) ="):
-                line = EXPECTED_GROUP
-            elif line.startswith("🌍 Общий прокси ="):
-                line = EXPECTED_GENERAL
-            elif line == "FINAL,PROXY":
-                line = f"FINAL,{GENERAL_GROUP}"
-            elif line in {f"DOMAIN,{host},PROXY" for host in EXCEPTION_HOSTS}:
-                line = line.rsplit(",", 1)[0] + f",{GENERAL_GROUP}"
-            else:
-                line = line.replace(",🤖 AI-сервисы (Финляндия)", f",{AI_GROUP}")
-                line = line.replace(",🌍 Общий прокси", f",{GENERAL_GROUP}")
-            expected.append(line)
+    def test_only_update_url_is_added_to_exact_f08(self):
+        expected = validate_configs.meaningful(self.f08)
         actual = [line for line in validate_configs.meaningful(self.lines)
                   if not line.startswith("update-url =")]
         self.assertEqual(actual, expected)
@@ -179,7 +167,7 @@ class F08PreservationTests(unittest.TestCase):
 
     def test_geoip_direct_and_exceptions_are_in_order(self):
         rules = validate_configs.meaningful(validate_configs.section_lines(self.lines, "[Rule]"))
-        self.assertEqual(rules[:3], [f"DOMAIN,{host},{GENERAL_GROUP}" for host in EXCEPTION_HOSTS])
+        self.assertEqual(rules[:3], [f"DOMAIN,{host},PROXY" for host in EXCEPTION_HOSTS])
         self.assertEqual(rules.count("GEOIP,RU,DIRECT"), 1)
         self.assertNotIn("GEOIP,RU,PROXY", rules)
 
@@ -192,8 +180,8 @@ class F08PreservationTests(unittest.TestCase):
         return errors
 
     def test_validator_guards_geoip_final_and_exceptions(self):
-        required = ["GEOIP,RU,DIRECT", f"FINAL,{GENERAL_GROUP}"]
-        required += [f"DOMAIN,{host},{GENERAL_GROUP}" for host in EXCEPTION_HOSTS]
+        required = ["GEOIP,RU,DIRECT", "FINAL,PROXY"]
+        required += [f"DOMAIN,{host},PROXY" for host in EXCEPTION_HOSTS]
         for rule in required:
             with self.subTest(rule=rule):
                 self.assertIn(rule, self.lines)
@@ -204,14 +192,14 @@ class F08PreservationTests(unittest.TestCase):
                     self.assertTrue(any(rule in error for error in self.errors_for_lines(changed)))
 
     def test_validator_rejects_exception_after_geoip(self):
-        rule = f"DOMAIN,sub.alvsub.cc,{GENERAL_GROUP}"
+        rule = "DOMAIN,sub.alvsub.cc,PROXY"
         self.assertIn(rule, self.lines)
         changed = [line for line in self.lines if line != rule]
         changed.insert(changed.index("GEOIP,RU,DIRECT") + 1, rule)
         self.assertTrue(any("F08" in error for error in self.errors_for_lines(changed)))
 
     def test_validator_rejects_final_before_geoip(self):
-        rule = f"FINAL,{GENERAL_GROUP}"
+        rule = "FINAL,PROXY"
         self.assertIn(rule, self.lines)
         changed = [line for line in self.lines if line != rule]
         changed.insert(changed.index("GEOIP,RU,DIRECT"), rule)
