@@ -1,6 +1,5 @@
 """N01 changes local identifiers only; it is not a Shadowrocket runtime emulator."""
 
-import re
 import unittest
 from pathlib import Path
 
@@ -15,15 +14,15 @@ UPDATE_URL = (
 )
 NAMES = {
     "🤖 AI-сервисы (Финляндия)": "AI",
-    "🎧 Spotify": "Spotify",
-    "🌤️ Погода v2": "Weather",
-    "✈️ Telegram v2": "Telegram",
-    "🌍 Общий прокси": "Default",
-    "📺 YouTube": "YouTube",
-    "🛡️ Реклама и трекеры": "Ads",
-    "🇫🇮 Финляндия (авто)": "Finland",
-    "🗺️ Выбор сервера": "Servers",
-    "🚀 Авто (пинг)": "Auto",
+    "🎧 Spotify": "SPOTIFY",
+    "🌤️ Погода v2": "WEATHER",
+    "✈️ Telegram v2": "TELEGRAM",
+    "🌍 Общий прокси": "DEFAULT",
+    "📺 YouTube": "YOUTUBE",
+    "🛡️ Реклама и трекеры": "ADS",
+    "🇫🇮 Финляндия (авто)": "FINLAND",
+    "🗺️ Выбор сервера": "SERVERS",
+    "🚀 Авто (пинг)": "AUTO",
 }
 
 
@@ -86,7 +85,7 @@ class NamesTestProfileTests(unittest.TestCase):
         self.assertEqual(list(self.groups), list(NAMES.values()))
         self.assertEqual(len(section(self.lines, "[Proxy Group]")), len(NAMES))
         for name in self.groups:
-            self.assertRegex(name, r"^[A-Z][A-Za-z0-9]*$")
+            self.assertRegex(name, r"^[A-Z][A-Z0-9]*$")
             self.assertNotIn(name.upper(), validation.BUILTIN_POLICIES)
 
     def test_network_settings_unchanged_except_own_update_url(self):
@@ -98,9 +97,10 @@ class NamesTestProfileTests(unittest.TestCase):
     def test_finland_automatic_pool_and_probe_are_identical(self):
         original = next(line for line in section(self.base, "[Proxy Group]")
                         if line.startswith("🇫🇮 Финляндия (авто) ="))
-        self.assertEqual(self.groups["Finland"], original.split("=", 1)[1].strip())
-        self.assertTrue(self.groups["Finland"].startswith("url-test,"))
-        self.assertEqual(self.groups["AI"], "select,Finland,policy-select-name=Finland")
+        self.assertIn("FINLAND", self.groups)
+        self.assertEqual(self.groups["FINLAND"], original.split("=", 1)[1].strip())
+        self.assertTrue(self.groups["FINLAND"].startswith("url-test,"))
+        self.assertEqual(self.groups["AI"], "select,FINLAND,policy-select-name=FINLAND")
 
     def test_every_local_reference_has_exact_case(self):
         targets = []
@@ -149,9 +149,11 @@ class NamesTestProfileTests(unittest.TestCase):
         self.assertEqual(self.rules[-1], "FINAL,PROXY")
 
     def test_general_weather_telegram_paths_are_not_rebound(self):
-        self.assertEqual(self.groups["Default"], "select,PROXY,policy-select-name=PROXY")
-        self.assertEqual(self.groups["Weather"], "select,PROXY,DIRECT,Finland,policy-select-name=PROXY")
-        self.assertEqual(self.groups["Telegram"], "select,PROXY,Servers,Finland,Auto,policy-select-name=PROXY")
+        for name in ("DEFAULT", "WEATHER", "TELEGRAM"):
+            self.assertIn(name, self.groups)
+        self.assertEqual(self.groups["DEFAULT"], "select,PROXY,policy-select-name=PROXY")
+        self.assertEqual(self.groups["WEATHER"], "select,PROXY,DIRECT,FINLAND,policy-select-name=PROXY")
+        self.assertEqual(self.groups["TELEGRAM"], "select,PROXY,SERVERS,FINLAND,AUTO,policy-select-name=PROXY")
 
     def test_structure_and_no_secrets(self):
         errors = []
