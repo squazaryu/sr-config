@@ -1,4 +1,4 @@
-"""Preserve exact F08 settings; the selected server's country is a runtime check."""
+"""Preserve the user's working Finland-auto AI change on top of F08."""
 
 import unittest
 from pathlib import Path
@@ -11,7 +11,8 @@ AI_GROUP = "🤖 AI-сервисы (Финляндия)"
 GENERAL_GROUP = "🌍 Общий прокси"
 FINLAND_NODE = "🇫🇮 ALL VPN | ФИНЛЯНДИЯ"
 FINLAND_GROUP = "🇫🇮 Финляндия (авто)"
-EXPECTED_GROUP = f"{AI_GROUP} = select,PROXY,policy-select-name=PROXY"
+FINLAND_POLICY = "🇫🇮 ФИНЛЯНДИЯ (АВТО)"
+EXPECTED_GROUP = f"{AI_GROUP} = select,{FINLAND_POLICY},policy-select-name={FINLAND_POLICY}"
 EXPECTED_GENERAL = f"{GENERAL_GROUP} = select,PROXY,policy-select-name=PROXY"
 EXCEPTION_HOSTS = ("shdnetwork.website", "sub.alvsub.cc", "your-durev.com")
 EXPECTED_RULE = (
@@ -29,7 +30,7 @@ class AIRecoveryTests(unittest.TestCase):
     def test_new_ai_group_once(self):
         self.assertEqual(self.ai_groups, [EXPECTED_GROUP])
 
-    def test_ai_general_and_final_use_selected_proxy(self):
+    def test_general_and_final_keep_selected_proxy(self):
         self.assertEqual(len(self.ai_groups), 1)
         self.assertEqual(self.lines.count(EXPECTED_GENERAL), 1)
         self.assertEqual(self.lines.count("FINAL,PROXY"), 1)
@@ -40,10 +41,10 @@ class AIRecoveryTests(unittest.TestCase):
         self.assertEqual(macos_group.split("=", 1)[1].strip(), f"select, {FINLAND_GROUP}")
         self.assertIn("🎧 Spotify = select, DIRECT", self.macos)
 
-    def test_ai_uses_builtin_proxy_without_named_node_or_auto(self):
+    def test_ai_uses_shared_finland_auto_without_proxy_or_fixed_node(self):
         self.assertEqual(len(self.ai_groups), 1)
         fields = [part.strip() for part in self.ai_groups[0].split("=", 1)[1].split(",")]
-        self.assertEqual(fields, ["select", "PROXY", "policy-select-name=PROXY"])
+        self.assertEqual(fields, ["select", FINLAND_POLICY, f"policy-select-name={FINLAND_POLICY}"])
         self.assertEqual(sum(line.startswith(f"{FINLAND_GROUP} =") for line in self.lines), 1)
 
     def test_shared_finland_pool_keeps_seven_approved_candidates(self):
@@ -117,20 +118,21 @@ class AIPathValidationTests(unittest.TestCase):
         validate_configs.validate_ios_service_routes(configs, errors)
         return errors
 
-    def test_validator_accepts_original_f08_path(self):
+    def test_validator_accepts_user_finland_auto_path(self):
         self.assertEqual(self.errors_for_group(EXPECTED_GROUP), [])
 
     def test_validator_rejects_other_ai_destinations_and_auto_tests(self):
         changes = (
             ("= select,", "= url-test,"),
             ("= select,", "= fallback,"),
-            ("PROXY", FINLAND_NODE),
-            ("PROXY", "DIRECT"),
-            ("PROXY", FINLAND_GROUP),
-            ("PROXY", "🇫🇮 ФИНЛЯНДИЯ"),
-            ("PROXY", f"PROXY,{FINLAND_NODE}"),
-            ("PROXY", "PROXY,use=true"),
-            ("PROXY", "PROXY,interval=600"),
+            (FINLAND_POLICY, FINLAND_NODE),
+            (FINLAND_POLICY, "DIRECT"),
+            (FINLAND_POLICY, "PROXY"),
+            (FINLAND_POLICY, "🇫🇮 ФИНЛЯНДИЯ"),
+            (FINLAND_POLICY, f"{FINLAND_POLICY},PROXY"),
+            (FINLAND_POLICY, f"{FINLAND_POLICY},use=true"),
+            (FINLAND_POLICY, f"{FINLAND_POLICY},interval=600"),
+            (f"policy-select-name={FINLAND_POLICY}", "policy-select-name=PROXY"),
             (AI_GROUP, "🤖 AI-сервисы v2"),
             (AI_GROUP, "🤖 AI-сервисы v3"),
             (AI_GROUP, "🤖 AI-сервисы (ALL VPN FI)"),
@@ -156,8 +158,11 @@ class F08PreservationTests(unittest.TestCase):
         self.lines = (ROOT / "url-set-ios.conf").read_text(encoding="utf-8").splitlines()
         self.f08 = (ROOT / "tools/fixtures/ios-f08.conf").read_text(encoding="utf-8").splitlines()
 
-    def test_only_update_url_is_added_to_exact_f08(self):
+    def test_only_user_ai_change_and_update_url_differ_from_f08(self):
         expected = validate_configs.meaningful(self.f08)
+        old_ai_group = f"{AI_GROUP} = select,PROXY,policy-select-name=PROXY"
+        self.assertEqual(expected.count(old_ai_group), 1)
+        expected[expected.index(old_ai_group)] = EXPECTED_GROUP
         actual = [line for line in validate_configs.meaningful(self.lines)
                   if not line.startswith("update-url =")]
         self.assertEqual(actual, expected)
