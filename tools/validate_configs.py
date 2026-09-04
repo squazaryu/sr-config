@@ -62,7 +62,22 @@ IOS_STALE_FINLAND_AUTO_POLICIES = (
     "🇫🇮 ФИНЛЯНДИЯ 2",
     "FINLAND 🇫🇮",
 )
-IOS_AI_GROUP = "🤖 AI-сервисы (Финляндия) = select, 🇫🇮 Финляндия (авто)"
+IOS_AI_POLICY = "🤖 AI-сервисы (ALL VPN FI)"
+IOS_GENERAL_POLICY = "🌍 Общий прокси (ALL VPN FI)"
+IOS_FIXED_FINLAND_NODE = "🇫🇮 ALL VPN | ФИНЛЯНДИЯ"
+IOS_AI_GROUP = (
+    f"{IOS_AI_POLICY} = select,{IOS_FIXED_FINLAND_NODE},"
+    f"policy-select-name={IOS_FIXED_FINLAND_NODE}"
+)
+IOS_GENERAL_GROUP = (
+    f"{IOS_GENERAL_POLICY} = select,{IOS_FIXED_FINLAND_NODE},"
+    f"policy-select-name={IOS_FIXED_FINLAND_NODE}"
+)
+IOS_FINAL_RULE = f"FINAL,{IOS_GENERAL_POLICY}"
+IOS_F08_EXCEPTIONS = tuple(
+    f"DOMAIN,{host},{IOS_GENERAL_POLICY}"
+    for host in ("shdnetwork.website", "sub.alvsub.cc", "your-durev.com")
+)
 IOS_TELEGRAM_GROUP = (
     "✈️ Telegram v2 = select,PROXY,🗺️ Выбор сервера,🇫🇮 Финляндия (авто),"
     "🚀 Авто (пинг),policy-select-name=PROXY"
@@ -74,6 +89,7 @@ IOS_WEATHER_GROUP = (
 IOS_SERVICE_GROUPS = (
     IOS_FINLAND_AUTO_GROUP,
     IOS_AI_GROUP,
+    IOS_GENERAL_GROUP,
     IOS_TELEGRAM_GROUP,
     IOS_WEATHER_GROUP,
     "🎧 Spotify = select,🇫🇮 Финляндия (авто),PROXY,DIRECT,policy-select-name=🇫🇮 Финляндия (авто)",
@@ -84,6 +100,8 @@ LEGACY_IOS_SERVICE_GROUPS = (
     "🤖 AI-сервисы =",
     "🤖 AI-сервисы v2 =",
     "🤖 AI-сервисы v3 =",
+    "🤖 AI-сервисы (Финляндия) =",
+    "🌍 Общий прокси =",
     "✈️ Telegram =",
     "🌤️ Погода =",
     "▶️ YouTube =",
@@ -382,6 +400,16 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
         if any(line.startswith(prefix) for line in ios_lines):
             fail(errors, f"ios: устаревшая service group не должна сохраняться: {prefix}")
 
+    ios_rules = meaningful(section_lines(lines_by_name["ios"], "[Rule]"))
+    for rule in (*IOS_F08_EXCEPTIONS, "GEOIP,RU,DIRECT", IOS_FINAL_RULE):
+        if ios_rules.count(rule) != 1:
+            fail(errors, f"ios: F08 rule должно встречаться ровно один раз: {rule}")
+    if ios_rules[:len(IOS_F08_EXCEPTIONS)] != list(IOS_F08_EXCEPTIONS):
+        fail(errors, "ios: F08 исключения должны предшествовать остальным правилам")
+    final_rules = [rule for rule in ios_rules if rule.startswith("FINAL,")]
+    if final_rules != [IOS_FINAL_RULE] or not ios_rules or ios_rules[-1] != IOS_FINAL_RULE:
+        fail(errors, f"ios: единственный FINAL должен завершать правила: {IOS_FINAL_RULE}")
+
     finland_auto_lines = [
         line for line in ios_lines if line.startswith("🇫🇮 Финляндия (авто) =")
     ]
@@ -455,12 +483,12 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
         fail(errors, f"ios: полный YouTube RULE-SET должен встречаться ровно один раз: {source_rule}")
 
     ai_source_rule = (
-        f"RULE-SET,{AI_SOURCE},🤖 AI-сервисы (Финляндия),pre-matching,extended-matching"
+        f"RULE-SET,{AI_SOURCE},{IOS_AI_POLICY},pre-matching,extended-matching"
     )
     if ios_lines.count(ai_source_rule) != 1:
         fail(
             errors,
-            "ios: AI RULE-SET должен использовать группу 🤖 AI-сервисы (Финляндия) ровно один раз: "
+            f"ios: AI RULE-SET должен использовать группу {IOS_AI_POLICY} ровно один раз: "
             f"{ai_source_rule}",
         )
 
