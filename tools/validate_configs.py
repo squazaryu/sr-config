@@ -310,21 +310,25 @@ def validate_special_cases(lines_by_name: dict[str, list[str]], errors: list[str
 
 
 def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: list[str]) -> None:
-    # Recovery mode preserves the working self-contained profile, not past experiments.
+    # Main iOS promotes the accepted N01 settings; main remains the expanded fallback.
     main_update = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-main.conf"
     ios_update = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios.conf"
-    source = lines_by_name["main"]
+    reference_update = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios-names-test.conf"
+    reference = read_config(ROOT / "url-set-ios-names-test.conf", errors)
+    fallback = lines_by_name["main"]
     ios_lines = lines_by_name["ios"]
-    if source.count(main_update) != 1:
-        fail(errors, "main: recovery baseline должен содержать ровно один main update-url")
+    if fallback.count(main_update) != 1:
+        fail(errors, "main: fallback должен содержать ровно один main update-url")
+    if reference.count(reference_update) != 1:
+        fail(errors, "ios-reference: эталон N01 должен содержать ровно один собственный update-url")
     if ios_lines.count(ios_update) != 1:
-        fail(errors, "ios: recovery profile должен содержать ровно один iOS update-url")
-    expected = [ios_update if line == main_update else line for line in source]
-    if ios_lines != expected:
-        fail(errors, "ios: recovery profile должен точно совпадать с url-set-main.conf, кроме update-url")
+        fail(errors, "ios: основной профиль должен содержать ровно один iOS update-url")
+    expected = [ios_update if line == reference_update else line for line in meaningful(reference)]
+    if meaningful(ios_lines) != expected:
+        fail(errors, "ios: активные настройки должны совпадать с N01, кроме собственного update-url")
 
-    # Keep independent critical-service guards on the reference itself.
-    main_lines = [line.strip() for line in source]
+    # Keep independent critical-service guards on the self-contained fallback.
+    main_lines = [line.strip() for line in fallback]
     github_main = [f"DOMAIN-SUFFIX,{domain},DIRECT" for domain in GITHUB_DIRECT_DOMAINS]
     for rule in github_main:
         if main_lines.count(rule) != 1:
