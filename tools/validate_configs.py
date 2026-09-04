@@ -64,7 +64,10 @@ IOS_STALE_FINLAND_AUTO_POLICIES = (
 )
 IOS_AI_POLICY = "🤖 AI-сервисы (Финляндия)"
 IOS_GENERAL_POLICY = "🌍 Общий прокси"
-IOS_AI_GROUP = f"{IOS_AI_POLICY} = select,PROXY,policy-select-name=PROXY"
+IOS_AI_GROUP = (
+    f"{IOS_AI_POLICY} = select,🇫🇮 ФИНЛЯНДИЯ (АВТО),"
+    "policy-select-name=🇫🇮 ФИНЛЯНДИЯ (АВТО)"
+)
 IOS_GENERAL_GROUP = f"{IOS_GENERAL_POLICY} = select,PROXY,policy-select-name=PROXY"
 IOS_FINAL_RULE = "FINAL,PROXY"
 IOS_F08_EXCEPTIONS = tuple(
