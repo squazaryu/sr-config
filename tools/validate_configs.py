@@ -380,75 +380,22 @@ def validate_special_cases(lines_by_name: dict[str, list[str]], errors: list[str
 
 
 def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: list[str]) -> None:
-    ios_lines = [line.strip() for line in lines_by_name["ios"]]
-    ios_general = meaningful(section_lines(lines_by_name["ios"], "[General]"))
-    main_lines = [line.strip() for line in lines_by_name["main"]]
+    # Recovery mode preserves the working self-contained profile, not past experiments.
+    main_update = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-main.conf"
+    ios_update = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios.conf"
+    source = lines_by_name["main"]
+    ios_lines = lines_by_name["ios"]
+    if source.count(main_update) != 1:
+        fail(errors, "main: recovery baseline должен содержать ровно один main update-url")
+    if ios_lines.count(ios_update) != 1:
+        fail(errors, "ios: recovery profile должен содержать ровно один iOS update-url")
+    expected = [ios_update if line == main_update else line for line in source]
+    if ios_lines != expected:
+        fail(errors, "ios: recovery profile должен точно совпадать с url-set-main.conf, кроме update-url")
 
-    quic_settings = [line for line in ios_general if line.startswith("block-quic")]
-    if quic_settings != [IOS_QUIC_SETTING]:
-        fail(errors, f"ios: ожидался единственный transport setting: {IOS_QUIC_SETTING}")
-
-    for group in IOS_SERVICE_GROUPS:
-        if ios_lines.count(group) != 1:
-            fail(errors, f"ios: обязательная service group должна встречаться ровно один раз: {group}")
-
-    for prefix in LEGACY_IOS_SERVICE_GROUPS:
-        if any(line.startswith(prefix) for line in ios_lines):
-            fail(errors, f"ios: устаревшая service group не должна сохраняться: {prefix}")
-
-    ios_rules = meaningful(section_lines(lines_by_name["ios"], "[Rule]"))
-    for rule in (*IOS_F08_EXCEPTIONS, "GEOIP,RU,DIRECT", IOS_FINAL_RULE):
-        if ios_rules.count(rule) != 1:
-            fail(errors, f"ios: F08 rule должно встречаться ровно один раз: {rule}")
-    if ios_rules[:len(IOS_F08_EXCEPTIONS)] != list(IOS_F08_EXCEPTIONS):
-        fail(errors, "ios: F08 исключения должны предшествовать остальным правилам")
-    final_rules = [rule for rule in ios_rules if rule.startswith("FINAL,")]
-    if final_rules != [IOS_FINAL_RULE] or not ios_rules or ios_rules[-1] != IOS_FINAL_RULE:
-        fail(errors, f"ios: единственный FINAL должен завершать правила: {IOS_FINAL_RULE}")
-
-    finland_auto_lines = [
-        line for line in ios_lines if line.startswith("🇫🇮 Финляндия (авто) =")
-    ]
-    if len(finland_auto_lines) == 1:
-        fields = [field.strip() for field in finland_auto_lines[0].split("=", 1)[1].split(",")]
-        members = {field for field in fields[1:] if "=" not in field}
-        for stale_policy in IOS_STALE_FINLAND_AUTO_POLICIES:
-            if stale_policy in members:
-                fail(
-                    errors,
-                    "ios: устаревшая policy не должна входить в группу 🇫🇮 Финляндия (авто): "
-                    f"{stale_policy}",
-                )
-
-    for rule in IOS_YOUTUBE_QUIC_RULES:
-        if ios_lines.count(rule) != 1:
-            fail(errors, f"ios: YouTube QUIC rule должно встречаться ровно один раз: {rule}")
-
-    first_youtube_route = next(
-        (index for index, line in enumerate(ios_lines) if line in IOS_YOUTUBE_CRITICAL_RULES),
-        None,
-    )
-    quic_positions = [ios_lines.index(rule) for rule in IOS_YOUTUBE_QUIC_RULES if rule in ios_lines]
-    if first_youtube_route is not None and len(quic_positions) == len(IOS_YOUTUBE_QUIC_RULES):
-        if max(quic_positions) > first_youtube_route:
-            fail(errors, "ios: YouTube QUIC rules должны находиться до YouTube route rules")
-
-    if any(line.startswith("🐙 GitHub =") for line in ios_lines):
-        fail(errors, "ios: GitHub должен использовать явный DIRECT без сохраняемой select-группы")
-
-    github_ios = [f"DOMAIN-SUFFIX,{domain},DIRECT" for domain in GITHUB_DIRECT_DOMAINS]
-    github_main = list(github_ios)
-    required_ios = (
-        github_ios
-        + list(IOS_IAPPS_DIRECT_RULES)
-        + list(IOS_FEATHER_FINLAND_RULES)
-        + [IOS_PLATIPOMIRU_RULE]
-        + list(IOS_YOUTUBE_CRITICAL_RULES)
-        + list(IOS_INSTAGRAM_CRITICAL_RULES)
-    )
-    for rule in required_ios:
-        if ios_lines.count(rule) != 1:
-            fail(errors, f"ios: критичное service rule должно встречаться ровно один раз: {rule}")
+    # Keep independent critical-service guards on the reference itself.
+    main_lines = [line.strip() for line in source]
+    github_main = [f"DOMAIN-SUFFIX,{domain},DIRECT" for domain in GITHUB_DIRECT_DOMAINS]
     for rule in github_main:
         if main_lines.count(rule) != 1:
             fail(errors, f"main: GitHub DIRECT rule должно встречаться ровно один раз: {rule}")
@@ -473,42 +420,6 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
         main_rule = with_rule_policy(ios_rule, "🇫🇮 Финляндия")
         if main_rule not in main_lines:
             fail(errors, f"main: failsafe не содержит обязательное service rule: {main_rule}")
-
-    source_rule = f"RULE-SET,{YOUTUBE_SOURCE},📺 YouTube"
-    if ios_lines.count(source_rule) != 1:
-        fail(errors, f"ios: полный YouTube RULE-SET должен встречаться ровно один раз: {source_rule}")
-
-    ai_source_rule = (
-        f"RULE-SET,{AI_SOURCE},{IOS_AI_POLICY},pre-matching,extended-matching"
-    )
-    if ios_lines.count(ai_source_rule) != 1:
-        fail(
-            errors,
-            f"ios: AI RULE-SET должен использовать группу {IOS_AI_POLICY} ровно один раз: "
-            f"{ai_source_rule}",
-        )
-
-    weather_source_rule = (
-        f"RULE-SET,{WEATHER_SOURCE},🌤️ Погода v2,pre-matching,extended-matching"
-    )
-    if ios_lines.count(weather_source_rule) != 1:
-        fail(
-            errors,
-            "ios: weather RULE-SET должен использовать группу 🌤️ Погода v2 ровно один раз: "
-            f"{weather_source_rule}",
-        )
-
-    first_external = next(
-        (index for index, line in enumerate(ios_lines) if line.startswith("RULE-SET,https://")),
-        None,
-    )
-    positions = [ios_lines.index(rule) for rule in required_ios if rule in ios_lines]
-    if first_external is not None and len(positions) == len(required_ios) and max(positions) > first_external:
-        fail(
-            errors,
-            "ios: встроенные GitHub/iApps/Feather/Telegram Mini App/YouTube/Instagram "
-            "rules должны находиться до внешних RULE-SET",
-        )
 
 
 def main() -> int:
