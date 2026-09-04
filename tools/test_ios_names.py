@@ -70,7 +70,17 @@ class NamesTestProfileTests(unittest.TestCase):
         self.assertTrue(PROFILE.is_file(), "The requested separate naming test must exist")
         self.text = PROFILE.read_text(encoding="utf-8")
         self.lines = self.text.splitlines()
-        self.base = (ROOT / "url-set-ios.conf").read_text(encoding="utf-8").splitlines()
+        # N01 is a frozen PR42 naming experiment, not a live mirror of main iOS.
+        self.base = validation.meaningful(
+            (ROOT / "tools/fixtures/ios-f08.conf").read_text(encoding="utf-8").splitlines()
+        )
+        self.base.insert(self.base.index("[General]") + 1,
+                         "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios.conf")
+        old_ai = "🤖 AI-сервисы (Финляндия) = select,PROXY,policy-select-name=PROXY"
+        self.base[self.base.index(old_ai)] = (
+            "🤖 AI-сервисы (Финляндия) = select,🇫🇮 ФИНЛЯНДИЯ (АВТО),"
+            "policy-select-name=🇫🇮 ФИНЛЯНДИЯ (АВТО)"
+        )
         self.rules = section(self.lines, "[Rule]")
         self.groups = {
             name.strip(): value.strip()
