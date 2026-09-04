@@ -62,19 +62,24 @@ class SimpleIOSConfigTests(unittest.TestCase):
         self.assertEqual([line for line in general if not line.startswith("update-url")],
                          section(reference, "[General]"))
 
-    def test_three_flat_manual_groups(self):
+    def test_three_flat_groups_with_automatic_finland(self):
         self.assertEqual(set(self.groups), {"TEST-FI", "TEST-MEDIA", "TEST-ADS"})
         self.assertEqual(len(section(self.lines, "[Proxy Group]")), 3)
         for name, fields in self.groups.items():
             with self.subTest(group=name):
-                self.assertEqual(fields[0], "select")
+                self.assertEqual(fields[0], "url-test" if name == "TEST-FI" else "select")
                 members = [field for field in fields[1:] if "=" not in field]
                 options = dict(field.split("=", 1) for field in fields[1:] if "=" in field)
-                self.assertEqual(set(options), {"policy-select-name"})
+                expected_options = {"policy-select-name"}
+                if name == "TEST-FI":
+                    expected_options |= {"interval", "tolerance", "timeout", "url"}
+                self.assertEqual(set(options), expected_options)
                 self.assertIn(options["policy-select-name"], members)
                 self.assertFalse(set(members) & set(self.groups))
-        self.assertEqual(self.groups["TEST-FI"], ["select", *FINLAND_NODES, "PROXY",
-                         "policy-select-name=🇫🇮 ALL VPN | ФИНЛЯНДИЯ"])
+        self.assertEqual(self.groups["TEST-FI"], ["url-test", *FINLAND_NODES,
+                         "policy-select-name=🇫🇮 PROXY TG | ФИНЛЯНДИЯ",
+                         "interval=300", "tolerance=50", "timeout=5",
+                         "url=http://www.gstatic.com/generate_204"])
         self.assertEqual(self.groups["TEST-MEDIA"], ["select", "PREMIUM | ALL IN 1",
                          "BASE | ALL IN 1", "PROXY", "policy-select-name=PREMIUM | ALL IN 1"])
         self.assertEqual(self.groups["TEST-ADS"], ["select", "REJECT", "DIRECT", "policy-select-name=REJECT"])
