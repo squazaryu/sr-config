@@ -48,64 +48,7 @@ GITHUB_DIRECT_DOMAINS = (
     "github.dev",
     "ghcr.io",
 )
-IOS_QUIC_SETTING = "block-quic = always-allow"
-IOS_FINLAND_AUTO_GROUP = (
-    "🇫🇮 Финляндия (авто) = url-test,🇫🇮 PROXY TG | ФИНЛЯНДИЯ,"
-    "🇫🇮 FASTCON VPN | ФИНЛЯНДИЯ,🇫🇮 SODA VPN | ФИНЛЯНДИЯ,"
-    "🇫🇮 HIT VPN | ФИНЛЯНДИЯ,🇫🇮 ALL VPN | ФИНЛЯНДИЯ,"
-    "🇫🇮 ДАРВИН ВПН | ФИНЛЯНДИЯ,🇫🇮 FASTCOM VPN | ФИНЛЯНДИЯ,"
-    "policy-select-name=🇫🇮 PROXY TG | ФИНЛЯНДИЯ,interval=300,"
-    "tolerance=50,timeout=5,url=http://www.gstatic.com/generate_204"
-)
-IOS_STALE_FINLAND_AUTO_POLICIES = (
-    "🇫🇮 ФИНЛЯНДИЯ",
-    "🇫🇮 ФИНЛЯНДИЯ 2",
-    "FINLAND 🇫🇮",
-)
-IOS_AI_POLICY = "🤖 AI-сервисы (Финляндия)"
-IOS_GENERAL_POLICY = "🌍 Общий прокси"
-IOS_AI_GROUP = (
-    f"{IOS_AI_POLICY} = select,🇫🇮 ФИНЛЯНДИЯ (АВТО),"
-    "policy-select-name=🇫🇮 ФИНЛЯНДИЯ (АВТО)"
-)
-IOS_GENERAL_GROUP = f"{IOS_GENERAL_POLICY} = select,PROXY,policy-select-name=PROXY"
-IOS_FINAL_RULE = "FINAL,PROXY"
-IOS_F08_EXCEPTIONS = tuple(
-    f"DOMAIN,{host},PROXY"
-    for host in ("shdnetwork.website", "sub.alvsub.cc", "your-durev.com")
-)
-IOS_TELEGRAM_GROUP = (
-    "✈️ Telegram v2 = select,PROXY,🗺️ Выбор сервера,🇫🇮 Финляндия (авто),"
-    "🚀 Авто (пинг),policy-select-name=PROXY"
-)
-IOS_WEATHER_GROUP = (
-    "🌤️ Погода v2 = select,PROXY,DIRECT,🇫🇮 Финляндия (авто),"
-    "policy-select-name=PROXY"
-)
-IOS_SERVICE_GROUPS = (
-    IOS_FINLAND_AUTO_GROUP,
-    IOS_AI_GROUP,
-    IOS_GENERAL_GROUP,
-    IOS_TELEGRAM_GROUP,
-    IOS_WEATHER_GROUP,
-    "🎧 Spotify = select,🇫🇮 Финляндия (авто),PROXY,DIRECT,policy-select-name=🇫🇮 Финляндия (авто)",
-    "📺 YouTube = select,🗺️ ВЫБОР СЕРВЕРА,PROXY,🚀 АВТО (ПИНГ),🇫🇮 ФИНЛЯНДИЯ (АВТО),DIRECT,policy-select-name=🗺️ ВЫБОР СЕРВЕРА",
-    "🗺️ Выбор сервера = select,PREMIUM | ALL IN 1,BASE | ALL IN 1,YOUR-DUREV.COM,policy-select-name=PREMIUM | ALL IN 1",
-)
-LEGACY_IOS_SERVICE_GROUPS = (
-    "🤖 AI-сервисы =",
-    "🤖 AI-сервисы v2 =",
-    "🤖 AI-сервисы v3 =",
-    "🤖 AI-сервисы (ALL VPN FI) =",
-    "🌍 Общий прокси (ALL VPN FI) =",
-    "✈️ Telegram =",
-    "🌤️ Погода =",
-    "▶️ YouTube =",
-    "📸 Instagram =",
-    "📱 Instagram =",
-    "📱 Instagram (один узел) =",
-    "🪶 Feather =",
-)
+# Historical S01 requirements, also reused by the independent main service guards.
 IOS_YOUTUBE_CRITICAL_RULES = (
     "DOMAIN-SUFFIX,youtube.com,📺 YouTube",
     "DOMAIN-SUFFIX,ytimg.com,📺 YouTube",
@@ -158,20 +101,7 @@ IOS_FEATHER_FINLAND_RULES = tuple(
         "stikdebug.xyz",
     )
 )
-IOS_PLATIPOMIRU_RULE = "DOMAIN-SUFFIX,platipomiru.com,✈️ Telegram v2"
 MAIN_PLATIPOMIRU_RULE = "DOMAIN-SUFFIX,platipomiru.com,🇫🇮 Финляндия"
-YOUTUBE_SOURCE = (
-    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/"
-    "rule/Shadowrocket/YouTube/YouTube.list"
-)
-AI_SOURCE = (
-    "https://raw.githubusercontent.com/squazaryu/sr-config/main/"
-    "lists/ai-services.list"
-)
-WEATHER_SOURCE = (
-    "https://raw.githubusercontent.com/squazaryu/sr-config/main/"
-    "lists/weather.list"
-)
 
 
 def fail(errors: list[str], message: str) -> None:
