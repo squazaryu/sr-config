@@ -17,6 +17,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Test stable AI routing
+        run: python3 -m unittest discover -s tools -p 'test_*.py' -v
       - name: Validate configs
         run: python3 tools/validate_configs.py
       - name: Check remote RULE-SET sources

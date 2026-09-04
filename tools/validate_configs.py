@@ -49,19 +49,11 @@ GITHUB_DIRECT_DOMAINS = (
     "ghcr.io",
 )
 IOS_QUIC_SETTING = "block-quic = always-allow"
-IOS_FINLAND_AUTO_POLICIES = (
-    "🇫🇮 PROXY TG | ФИНЛЯНДИЯ",
-    "🇫🇮 FASTCON VPN | ФИНЛЯНДИЯ",
-    "🇫🇮 SODA VPN | ФИНЛЯНДИЯ",
-    "🇫🇮 HIT VPN | ФИНЛЯНДИЯ",
-    "🇫🇮 ALL VPN | ФИНЛЯНДИЯ",
-    "🇫🇮 ДАРВИН ВПН | ФИНЛЯНДИЯ",
-    "🇫🇮 FASTCOM VPN | ФИНЛЯНДИЯ",
-)
 IOS_FINLAND_AUTO_GROUP = (
-    "🇫🇮 Финляндия (авто) = url-test,"
-    + ",".join(IOS_FINLAND_AUTO_POLICIES)
-    + ","
+    "🇫🇮 Финляндия (авто) = url-test,🇫🇮 PROXY TG | ФИНЛЯНДИЯ,"
+    "🇫🇮 FASTCON VPN | ФИНЛЯНДИЯ,🇫🇮 SODA VPN | ФИНЛЯНДИЯ,"
+    "🇫🇮 HIT VPN | ФИНЛЯНДИЯ,🇫🇮 ALL VPN | ФИНЛЯНДИЯ,"
+    "🇫🇮 ДАРВИН ВПН | ФИНЛЯНДИЯ,🇫🇮 FASTCOM VPN | ФИНЛЯНДИЯ,"
     "policy-select-name=🇫🇮 PROXY TG | ФИНЛЯНДИЯ,interval=300,"
     "tolerance=50,timeout=5,url=http://www.gstatic.com/generate_204"
 )
@@ -70,15 +62,9 @@ IOS_STALE_FINLAND_AUTO_POLICIES = (
     "🇫🇮 ФИНЛЯНДИЯ 2",
     "FINLAND 🇫🇮",
 )
-IOS_AI_FALLBACK_POLICIES = (
-    "🇫🇮 ALL VPN | ФИНЛЯНДИЯ",
-    *(policy for policy in IOS_FINLAND_AUTO_POLICIES if policy != "🇫🇮 ALL VPN | ФИНЛЯНДИЯ"),
-)
-IOS_AI_PROBE_URL = "https://ios.chat.openai.com/cdn-cgi/trace"
 IOS_AI_GROUP = (
-    "🤖 AI-сервисы v3 = fallback,"
-    + ",".join(IOS_AI_FALLBACK_POLICIES)
-    + f",interval=60,timeout=5,url={IOS_AI_PROBE_URL}"
+    "🤖 AI-сервисы v2 = select,🇫🇮 ALL VPN | ФИНЛЯНДИЯ,"
+    "🇫🇮 Финляндия (авто),policy-select-name=🇫🇮 ALL VPN | ФИНЛЯНДИЯ"
 )
 IOS_TELEGRAM_GROUP = (
     "✈️ Telegram v2 = select,PROXY,🗺️ Выбор сервера,🇫🇮 Финляндия (авто),"
@@ -99,7 +85,6 @@ IOS_SERVICE_GROUPS = (
 )
 LEGACY_IOS_SERVICE_GROUPS = (
     "🤖 AI-сервисы =",
-    "🤖 AI-сервисы v2 =",
     "✈️ Telegram =",
     "🌤️ Погода =",
     "▶️ YouTube =",
@@ -471,12 +456,12 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
         fail(errors, f"ios: полный YouTube RULE-SET должен встречаться ровно один раз: {source_rule}")
 
     ai_source_rule = (
-        f"RULE-SET,{AI_SOURCE},🤖 AI-сервисы v3,pre-matching,extended-matching"
+        f"RULE-SET,{AI_SOURCE},🤖 AI-сервисы v2,pre-matching,extended-matching"
     )
     if ios_lines.count(ai_source_rule) != 1:
         fail(
             errors,
-            "ios: AI RULE-SET должен использовать группу 🤖 AI-сервисы v3 ровно один раз: "
+            "ios: AI RULE-SET должен использовать группу 🤖 AI-сервисы v2 ровно один раз: "
             f"{ai_source_rule}",
         )
 
