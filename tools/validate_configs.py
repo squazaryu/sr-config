@@ -62,13 +62,7 @@ IOS_STALE_FINLAND_AUTO_POLICIES = (
     "🇫🇮 ФИНЛЯНДИЯ 2",
     "FINLAND 🇫🇮",
 )
-IOS_AI_GROUP = (
-    "🤖 AI-сервисы v2 = url-test,🇫🇮 PROXY TG | ФИНЛЯНДИЯ,"
-    "🇫🇮 ДАРВИН ВПН | ФИНЛЯНДИЯ,🇫🇮 SODA VPN | ФИНЛЯНДИЯ,"
-    "🇫🇮 HIT VPN | ФИНЛЯНДИЯ,🇫🇮 FASTCOM VPN | ФИНЛЯНДИЯ,"
-    "🇫🇮 ALL VPN | ФИНЛЯНДИЯ,policy-select-name=🇫🇮 ДАРВИН ВПН | ФИНЛЯНДИЯ,"
-    "interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
-)
+IOS_AI_GROUP = "🤖 AI-сервисы (Финляндия) = select, 🇫🇮 Финляндия (авто)"
 IOS_TELEGRAM_GROUP = (
     "✈️ Telegram v2 = select,PROXY,🗺️ Выбор сервера,🇫🇮 Финляндия (авто),"
     "🚀 Авто (пинг),policy-select-name=PROXY"
@@ -88,6 +82,8 @@ IOS_SERVICE_GROUPS = (
 )
 LEGACY_IOS_SERVICE_GROUPS = (
     "🤖 AI-сервисы =",
+    "🤖 AI-сервисы v2 =",
+    "🤖 AI-сервисы v3 =",
     "✈️ Telegram =",
     "🌤️ Погода =",
     "▶️ YouTube =",
@@ -459,12 +455,12 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
         fail(errors, f"ios: полный YouTube RULE-SET должен встречаться ровно один раз: {source_rule}")
 
     ai_source_rule = (
-        f"RULE-SET,{AI_SOURCE},🤖 AI-сервисы v2,pre-matching,extended-matching"
+        f"RULE-SET,{AI_SOURCE},🤖 AI-сервисы (Финляндия),pre-matching,extended-matching"
     )
     if ios_lines.count(ai_source_rule) != 1:
         fail(
             errors,
-            "ios: AI RULE-SET должен использовать группу 🤖 AI-сервисы v2 ровно один раз: "
+            "ios: AI RULE-SET должен использовать группу 🤖 AI-сервисы (Финляндия) ровно один раз: "
             f"{ai_source_rule}",
         )
 
