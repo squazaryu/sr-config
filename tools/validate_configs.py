@@ -62,20 +62,13 @@ IOS_STALE_FINLAND_AUTO_POLICIES = (
     "🇫🇮 ФИНЛЯНДИЯ 2",
     "FINLAND 🇫🇮",
 )
-IOS_AI_POLICY = "🤖 AI-сервисы (ALL VPN FI)"
-IOS_GENERAL_POLICY = "🌍 Общий прокси (ALL VPN FI)"
-IOS_FIXED_FINLAND_NODE = "🇫🇮 ALL VPN | ФИНЛЯНДИЯ"
-IOS_AI_GROUP = (
-    f"{IOS_AI_POLICY} = select,{IOS_FIXED_FINLAND_NODE},"
-    f"policy-select-name={IOS_FIXED_FINLAND_NODE}"
-)
-IOS_GENERAL_GROUP = (
-    f"{IOS_GENERAL_POLICY} = select,{IOS_FIXED_FINLAND_NODE},"
-    f"policy-select-name={IOS_FIXED_FINLAND_NODE}"
-)
-IOS_FINAL_RULE = f"FINAL,{IOS_GENERAL_POLICY}"
+IOS_AI_POLICY = "🤖 AI-сервисы (Финляндия)"
+IOS_GENERAL_POLICY = "🌍 Общий прокси"
+IOS_AI_GROUP = f"{IOS_AI_POLICY} = select,PROXY,policy-select-name=PROXY"
+IOS_GENERAL_GROUP = f"{IOS_GENERAL_POLICY} = select,PROXY,policy-select-name=PROXY"
+IOS_FINAL_RULE = "FINAL,PROXY"
 IOS_F08_EXCEPTIONS = tuple(
-    f"DOMAIN,{host},{IOS_GENERAL_POLICY}"
+    f"DOMAIN,{host},PROXY"
     for host in ("shdnetwork.website", "sub.alvsub.cc", "your-durev.com")
 )
 IOS_TELEGRAM_GROUP = (
@@ -100,8 +93,8 @@ LEGACY_IOS_SERVICE_GROUPS = (
     "🤖 AI-сервисы =",
     "🤖 AI-сервисы v2 =",
     "🤖 AI-сервисы v3 =",
-    "🤖 AI-сервисы (Финляндия) =",
-    "🌍 Общий прокси =",
+    "🤖 AI-сервисы (ALL VPN FI) =",
+    "🌍 Общий прокси (ALL VPN FI) =",
     "✈️ Telegram =",
     "🌤️ Погода =",
     "▶️ YouTube =",
