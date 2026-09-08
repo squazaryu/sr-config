@@ -324,6 +324,7 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     for required in (
         "AI = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
         "FINLAND = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,interval=300,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
+        "INSTAGRAM = select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=AUTO",
     ):
         name, value = (part.strip() for part in required.split("=", 1))
         if groups.get(name) != value:
@@ -337,12 +338,14 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
         "DOMAIN-SUFFIX,icloud.com,DIRECT",
         "DOMAIN-SUFFIX,apple.com,DIRECT",
         "DOMAIN-SUFFIX,ru,DIRECT",
-        "DOMAIN-SUFFIX,getutm.app,FINLAND",
-        "DOMAIN-SUFFIX,fastsign.dev,FINLAND",
-        "DOMAIN-SUFFIX,apptesters.org,FINLAND",
-        "DOMAIN-SUFFIX,hottubapp.io,FINLAND",
-        "DOMAIN-SUFFIX,stikdebug.xyz,FINLAND",
+        "DOMAIN-SUFFIX,getutm.app,PROXY",
+        "DOMAIN-SUFFIX,fastsign.dev,PROXY",
+        "DOMAIN-SUFFIX,apptesters.org,PROXY",
+        "DOMAIN-SUFFIX,hottubapp.io,PROXY",
+        "DOMAIN-SUFFIX,stikdebug.xyz,PROXY",
         "DOMAIN-SUFFIX,platipomiru.com,TELEGRAM",
+        "DOMAIN-SUFFIX,instagram.com,INSTAGRAM",
+        "IP-ASN,32934,INSTAGRAM,no-resolve",
     ):
         if rules.count(required) != 1 or rules.index(required) >= boundary:
             fail(errors, f"ios: отсутствует или смещено раннее правило {required}")

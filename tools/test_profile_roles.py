@@ -8,6 +8,49 @@ ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE = ROOT / "archive/2026-09-08"
 AI = "AI = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
 FINLAND = "FINLAND = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,interval=300,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
+INSTAGRAM = "INSTAGRAM = select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=AUTO"
+ADDED_AI_RULES = (
+    "DOMAIN-SUFFIX,featuregates.org,AI",
+    "DOMAIN-SUFFIX,segment.io,AI",
+    "DOMAIN-SUFFIX,statsig.com,AI",
+    "DOMAIN-SUFFIX,statsigapi.net,AI",
+    "DOMAIN-SUFFIX,featureassets.org,AI",
+    "DOMAIN-SUFFIX,prodregistryv2.org,AI",
+)
+LIVEKIT_AI_RULES = (
+    "DOMAIN,turn.livekit.cloud,AI",
+    "DOMAIN,host.livekit.cloud,AI",
+)
+META_RULE_PREFIXES = (
+    "DOMAIN-SUFFIX,instagram.com",
+    "DOMAIN-SUFFIX,instagr.am",
+    "DOMAIN-SUFFIX,cdninstagram.com",
+    "DOMAIN-SUFFIX,ig.me",
+    "DOMAIN-SUFFIX,igcdn.com",
+    "DOMAIN-SUFFIX,igsonar.com",
+    "DOMAIN-SUFFIX,igtv.com",
+    "DOMAIN-SUFFIX,facebook.com",
+    "DOMAIN-SUFFIX,facebook.net",
+    "DOMAIN-SUFFIX,fb.com",
+    "DOMAIN-SUFFIX,fb.me",
+    "DOMAIN-SUFFIX,fbcdn.com",
+    "DOMAIN-SUFFIX,fbcdn.net",
+    "DOMAIN-SUFFIX,fbsbx.com",
+    "DOMAIN-SUFFIX,fbsbx.net",
+    "DOMAIN-SUFFIX,meta.com",
+    "DOMAIN-SUFFIX,messenger.com",
+    "DOMAIN-SUFFIX,m.me",
+    "DOMAIN-SUFFIX,threads.net",
+    "DOMAIN-SUFFIX,fbcdn-a.akamaihd.net",
+    "DOMAIN-KEYWORD,instagram",
+    "IP-ASN,32934",
+    "IP-ASN,63293",
+    "IP-CIDR,31.13.64.0/18",
+    "IP-CIDR,129.134.0.0/17",
+    "IP-CIDR,157.240.0.0/17",
+    "IP-CIDR,173.252.64.0/18",
+    "IP-CIDR6,2A03:2880::/32",
+)
 FEATHER_DOMAINS = (
     "getutm.app",
     "fastsign.dev",
@@ -16,7 +59,7 @@ FEATHER_DOMAINS = (
     "stikdebug.xyz",
 )
 FEATHER_RULES = tuple(
-    f"DOMAIN-SUFFIX,{domain},FINLAND" for domain in FEATHER_DOMAINS
+    f"DOMAIN-SUFFIX,{domain},PROXY" for domain in FEATHER_DOMAINS
 )
 LEGACY_FEATHER_RULES = tuple(
     f"DOMAIN-SUFFIX,{domain},DIRECT" for domain in FEATHER_DOMAINS
@@ -51,28 +94,48 @@ class ProfileRoleTests(unittest.TestCase):
                 line = AI
             elif line.startswith("FINLAND ="):
                 line = FINLAND
+            elif line.startswith("YOUTUBE ="):
+                expected.extend((line, INSTAGRAM))
+                continue
             elif line == "DOMAIN-SUFFIX,platipomiru.com,PROXY":
                 line = "DOMAIN-SUFFIX,platipomiru.com,TELEGRAM"
             elif line in LEGACY_FEATHER_RULES:
-                line = line.rsplit(",", 1)[0] + ",FINLAND"
+                line = line.rsplit(",", 1)[0] + ",PROXY"
+            elif any(line.startswith(prefix + ",") for prefix in META_RULE_PREFIXES):
+                fields = line.split(",")
+                fields[2] = "INSTAGRAM"
+                line = ",".join(fields)
             expected.append(line)
+            if line == "DOMAIN-SUFFIX,ct.sendgrid.net,AI":
+                expected.extend(ADDED_AI_RULES)
+            if line == "DOMAIN,workos.imgix.net,AI":
+                expected.extend(LIVEKIT_AI_RULES)
         self.assertEqual(self.text, "\n".join(expected) + "\n")
 
     def test_all_rules_keep_order_and_options(self):
         original = validation.meaningful(validation.section_lines(self.reference.splitlines(), "[Rule]"))
-        original = [
-            "DOMAIN-SUFFIX,platipomiru.com,TELEGRAM"
-            if rule == "DOMAIN-SUFFIX,platipomiru.com,PROXY"
-            else (rule.rsplit(",", 1)[0] + ",FINLAND"
-                  if rule in LEGACY_FEATHER_RULES else rule)
-            for rule in original
-        ]
+        updated = []
+        for rule in original:
+            if rule == "DOMAIN-SUFFIX,platipomiru.com,PROXY":
+                rule = "DOMAIN-SUFFIX,platipomiru.com,TELEGRAM"
+            elif rule in LEGACY_FEATHER_RULES:
+                rule = rule.rsplit(",", 1)[0] + ",PROXY"
+            elif any(rule.startswith(prefix + ",") for prefix in META_RULE_PREFIXES):
+                fields = rule.split(",")
+                fields[2] = "INSTAGRAM"
+                rule = ",".join(fields)
+            updated.append(rule)
+            if rule == "DOMAIN-SUFFIX,ct.sendgrid.net,AI":
+                updated.extend(ADDED_AI_RULES)
+            if rule == "DOMAIN,workos.imgix.net,AI":
+                updated.extend(LIVEKIT_AI_RULES)
+        original = updated
         self.assertEqual(self.rules, original)
         self.assertEqual(sum(rule.startswith("RULE-SET,") for rule in self.rules), 18)
 
     def test_fallback_and_macos_are_unchanged(self):
         hashes = {
-            "url-set-main.conf": "5280e461a1109c645cce7fdffb6e1066cbacd2b2aed3ada12cc75b6542f14832",
+            "url-set-main.conf": "541a7e558d60dca72ec128eedb2739f05d38e85bc8fe2bb0ddebc0b373e15da8",
             "url-set-macos.conf": "d19551c09ef344455566d324fd8479cce60afeb28506dfb10a9e23560a95d2b7",
         }
         for name, digest in hashes.items():
@@ -93,10 +156,11 @@ class ProfileRoleTests(unittest.TestCase):
                 if setting.startswith("policy-select-name="):
                     self.assertIn(setting.split("=", 1)[1], members)
             groups[name.strip()] = members
-        self.assertEqual(len(groups), 10)
+        self.assertEqual(len(groups), 11)
         self.assertNotIn("FINLAND", groups["AI"])
         self.assertEqual(len(groups["AI"]), 4)
         self.assertEqual(len(groups["FINLAND"]), 2)
+        self.assertEqual(groups["INSTAGRAM"], ["SERVERS", "PROXY", "AUTO", "FINLAND", "DIRECT"])
         for rule in FEATHER_RULES:
             self.assertIn(rule, self.rules)
         def walk(name, stack):
