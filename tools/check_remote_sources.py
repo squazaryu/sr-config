@@ -14,7 +14,11 @@ from urllib.request import Request, urlopen
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CONFIG_PATHS = (ROOT / "url-set-ios.conf", ROOT / "url-set-macos.conf")
+CONFIG_PATHS = (
+    ROOT / "url-set-ios.conf",
+    ROOT / "url-set-ios-working.conf",
+    ROOT / "url-set-macos.conf",
+)
 FETCH_TIMEOUT = 30
 MAX_SOURCE_BYTES = 16 * 1024 * 1024
 MAX_WORKERS = 8

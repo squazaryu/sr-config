@@ -7,7 +7,19 @@
 | Файл | Назначение |
 |---|---|
 | [url-set-ios.conf](https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios.conf) | Основной профиль: принятый пользователем N01 с управляемыми группами |
+| [url-set-ios-working.conf](https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios-working.conf) | Отдельный снимок рабочего iOS-профиля от 2026-09-08, без встроенного `update-url` |
 | [url-set-main.conf](https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-main.conf) | Самодостаточный fallback: полностью расписанные правила, без групп и внешних RULE-SET |
+
+`url-set-ios-working.conf` опубликован отдельно и не заменяет основной iOS или
+fallback. Его 167 строк сохранены посимвольно из переданного рабочего профиля:
+10 групп, 135 правил и 18 внешних RULE-SET. Для установки добавить URL:
+
+```
+https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios-working.conf
+```
+
+Внутри файла намеренно нет `update-url`; импортированный снимок не будет
+самостоятельно синхронизироваться с другим профилем.
 
 Основной iOS перенесён из `url-set-ios-names-test.conf` после сообщения
 пользователя о работающем тестовом варианте. От N01 отличаются только
@@ -209,20 +221,16 @@ python3 tools/validate_configs.py
 python3 tools/build_failsafe.py --check
 ```
 
-Проверка запускается автоматически в GitHub Actions для каждого push и pull
-request. CI также проверяет доступность всех удалённых `RULE-SET` основного
-iOS и macOS. Проверить это локально можно командой:
+GitHub Actions сейчас отключены вручную. Локальная проверка доступности всех
+удалённых `RULE-SET` основного iOS, отдельного рабочего iOS и macOS запускается
+командой:
 
 ```
 python3 tools/check_remote_sources.py
 ```
 
-Кроме проверки при изменениях, workflow
-`.github/workflows/monitor-remote-sources.yml` запускается ежедневно в 09:00 по
-Москве и доступен для ручного запуска через GitHub Actions. При недоступности
-источников он сохраняет отчёт и создаёт/обновляет GitHub Issue; после
-восстановления issue закрывается автоматически. Для email/push-уведомлений
-нужно включить Watch/Actions notifications для репозитория.
+Файлы workflow сохранены в репозитории, но до их ручного включения проверки не
+являются автоматическим merge-гейтом и ежедневный монитор источников не запускается.
 
 Первый версионированный baseline — `v1.0.0`; для быстрого отката можно
 использовать, например,
