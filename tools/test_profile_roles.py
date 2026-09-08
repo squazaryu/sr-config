@@ -27,7 +27,7 @@ class ProfileRoleTests(unittest.TestCase):
         validation.validate_ios_service_routes(configs, errors)
         return errors
 
-    def test_exact_user_promotion_changes_only_header_update_url_ai_and_finland(self):
+    def test_user_profile_preserves_only_approved_changes(self):
         expected = []
         for line in self.reference.splitlines():
             if line.startswith("# Shadowrocket:"):
@@ -38,11 +38,16 @@ class ProfileRoleTests(unittest.TestCase):
                 line = AI
             elif line.startswith("FINLAND ="):
                 line = FINLAND
+            elif line == "DOMAIN-SUFFIX,platipomiru.com,PROXY":
+                line = "DOMAIN-SUFFIX,platipomiru.com,TELEGRAM"
             expected.append(line)
         self.assertEqual(self.text, "\n".join(expected) + "\n")
 
     def test_all_rules_keep_order_and_options(self):
         original = validation.meaningful(validation.section_lines(self.reference.splitlines(), "[Rule]"))
+        original = ["DOMAIN-SUFFIX,platipomiru.com,TELEGRAM"
+                    if rule == "DOMAIN-SUFFIX,platipomiru.com,PROXY" else rule
+                    for rule in original]
         self.assertEqual(self.rules, original)
         self.assertEqual(sum(rule.startswith("RULE-SET,") for rule in self.rules), 18)
 
@@ -92,7 +97,8 @@ class ProfileRoleTests(unittest.TestCase):
 
     def test_validator_rejects_late_or_missing_early_service_rules(self):
         for rule in ("DOMAIN-SUFFIX,chatgpt.com,AI", "DOMAIN,challenges.cloudflare.com,AI",
-                     "DOMAIN-SUFFIX,icloud.com,DIRECT", "DOMAIN-SUFFIX,ru,DIRECT"):
+                     "DOMAIN-SUFFIX,icloud.com,DIRECT", "DOMAIN-SUFFIX,ru,DIRECT",
+                     "DOMAIN-SUFFIX,platipomiru.com,TELEGRAM"):
             changed = self.text.replace(rule + "\n", "", 1)
             self.assertTrue(self.errors_for(changed))
             self.assertTrue(self.errors_for(changed.replace("FINAL,PROXY", rule + "\nFINAL,PROXY")))
