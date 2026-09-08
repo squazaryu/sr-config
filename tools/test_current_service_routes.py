@@ -75,6 +75,31 @@ class CurrentServiceRouteTests(unittest.TestCase):
             "tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
         )
 
+    def test_instagram_has_a_separate_proxy_group(self):
+        self.assertEqual(
+            self.groups.get("INSTAGRAM"),
+            "select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=AUTO",
+        )
+        meta_prefixes = (
+            "DOMAIN-SUFFIX,instagram.com",
+            "DOMAIN-SUFFIX,instagr.am",
+            "DOMAIN-SUFFIX,cdninstagram.com",
+            "DOMAIN-SUFFIX,facebook.com",
+            "DOMAIN-SUFFIX,fbcdn.net",
+            "DOMAIN-SUFFIX,meta.com",
+            "DOMAIN-SUFFIX,messenger.com",
+            "DOMAIN-SUFFIX,threads.net",
+            "DOMAIN-KEYWORD,instagram",
+            "IP-ASN,32934",
+            "IP-ASN,63293",
+            "IP-CIDR6,2A03:2880::/32",
+        )
+        for prefix in meta_prefixes:
+            matches = [rule for rule in self.rules if rule.startswith(prefix + ",")]
+            with self.subTest(prefix=prefix):
+                self.assertEqual(len(matches), 1)
+                self.assertEqual(matches[0].split(",")[2], "INSTAGRAM")
+
     def test_fallback_matches_the_current_source_snapshots(self):
         self.assertEqual(
             build_failsafe.CONFIG_PATH.read_text(encoding="utf-8"),
