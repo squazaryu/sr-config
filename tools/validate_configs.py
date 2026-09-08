@@ -337,6 +337,7 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
         "DOMAIN-SUFFIX,icloud.com,DIRECT",
         "DOMAIN-SUFFIX,apple.com,DIRECT",
         "DOMAIN-SUFFIX,ru,DIRECT",
+        "DOMAIN-SUFFIX,platipomiru.com,TELEGRAM",
     ):
         if rules.count(required) != 1 or rules.index(required) >= boundary:
             fail(errors, f"ios: отсутствует или смещено раннее правило {required}")

@@ -10,8 +10,10 @@
 | [url-set-macos.conf](https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-macos.conf) | Независимый macOS-профиль |
 | [url-set-main.conf](https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-main.conf) | Самодостаточный fallback: встроенные списки, без Proxy Group и внешних RULE-SET |
 
-В iOS сохранён присланный пользователем текст с одной согласованной правкой:
-`SHD` исключён из кандидатов AI. Встроенного `update-url` нет, как в экспорте.
+В iOS сохранён присланный пользователем текст с согласованными правками:
+`SHD` исключён из кандидатов AI; `platipomiru.com` и его поддомены направлены
+через TELEGRAM, чтобы мини-приложение следовало выбранному маршруту Telegram.
+Встроенного `update-url` нет, как в экспорте.
 AI выбирает четыре записи напрямую: `FINLAND 🇫🇮`, `🇫🇮 ФИНЛЯНДИЯ`,
 `FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2` и
 `FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2`.
