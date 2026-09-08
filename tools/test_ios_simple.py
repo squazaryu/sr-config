@@ -8,7 +8,7 @@ import validate_configs as validation
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROFILE = ROOT / "url-set-ios-simple-test.conf"
+PROFILE = ROOT / "archive/2026-09-08/url-set-ios-simple-test.conf"
 UPDATE_URL = (
     "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/"
     "url-set-ios-simple-test.conf"

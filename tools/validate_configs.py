@@ -310,22 +310,45 @@ def validate_special_cases(lines_by_name: dict[str, list[str]], errors: list[str
 
 
 def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: list[str]) -> None:
-    # Main iOS promotes the accepted N01 settings; main remains the expanded fallback.
+    # User-approved September 8 iOS profile; fallback remains independent.
     main_update = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-main.conf"
-    ios_update = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios.conf"
-    reference_update = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios-names-test.conf"
-    reference = read_config(ROOT / "url-set-ios-names-test.conf", errors)
     fallback = lines_by_name["main"]
     ios_lines = lines_by_name["ios"]
     if fallback.count(main_update) != 1:
         fail(errors, "main: fallback должен содержать ровно один main update-url")
-    if reference.count(reference_update) != 1:
-        fail(errors, "ios-reference: эталон N01 должен содержать ровно один собственный update-url")
-    if ios_lines.count(ios_update) != 1:
-        fail(errors, "ios: основной профиль должен содержать ровно один iOS update-url")
-    expected = [ios_update if line == reference_update else line for line in meaningful(reference)]
-    if meaningful(ios_lines) != expected:
-        fail(errors, "ios: активные настройки должны совпадать с N01, кроме собственного update-url")
+    general = meaningful(section_lines(ios_lines, "[General]"))
+    if any(line.startswith("update-url") for line in general):
+        fail(errors, "ios: пользовательский профиль сохранён без update-url")
+    groups = dict(line.split("=", 1) for line in meaningful(section_lines(ios_lines, "[Proxy Group]")) if "=" in line)
+    groups = {name.strip(): value.strip() for name, value in groups.items()}
+    for required in (
+        "AI = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
+        "FINLAND = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,interval=300,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
+    ):
+        name, value = (part.strip() for part in required.split("=", 1))
+        if groups.get(name) != value:
+            fail(errors, f"ios: изменён утверждённый состав или параметры группы {name}")
+    rules = meaningful(section_lines(ios_lines, "[Rule]"))
+    boundary = next((i for i, rule in enumerate(rules) if rule.startswith(("RULE-SET,", "GEOIP,"))), len(rules))
+    for required in (
+        "DOMAIN-SUFFIX,chatgpt.com,AI",
+        "DOMAIN-SUFFIX,openai.com,AI",
+        "DOMAIN,challenges.cloudflare.com,AI",
+        "DOMAIN-SUFFIX,icloud.com,DIRECT",
+        "DOMAIN-SUFFIX,apple.com,DIRECT",
+        "DOMAIN-SUFFIX,ru,DIRECT",
+    ):
+        if rules.count(required) != 1 or rules.index(required) >= boundary:
+            fail(errors, f"ios: отсутствует или смещено раннее правило {required}")
+    for domain in ("chatgpt.com", "openai.com", "oaistatic.com", "oaiusercontent.com"):
+        guard = f"AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,{domain})),REJECT-NO-DROP"
+        route = f"DOMAIN-SUFFIX,{domain},AI"
+        if guard not in rules or route not in rules or rules.index(guard) >= rules.index(route):
+            fail(errors, f"ios: нарушен порядок QUIC/AI для {domain}")
+    if any(rule.startswith("DST-PORT,") for rule in rules):
+        fail(errors, "ios: недопустимое широкое правило по порту во встроенном блоке")
+    if "GEOIP,RU,DIRECT" not in rules or not rules or rules[-1] != "FINAL,PROXY":
+        fail(errors, "ios: нарушены GEOIP DIRECT / FINAL PROXY")
 
     # Keep independent critical-service guards on the self-contained fallback.
     main_lines = [line.strip() for line in fallback]

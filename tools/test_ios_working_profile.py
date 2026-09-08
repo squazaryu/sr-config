@@ -11,7 +11,7 @@ import validate_configs as validation
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROFILE = ROOT / "url-set-ios-working.conf"
+PROFILE = ROOT / "archive/2026-09-08/url-set-ios-working.conf"
 EXPECTED_SHA256 = "4f84a91a696d59ede05a0922b3c9d2e482e5a7c7d68aec57cf77e2225ca5f209"
 EXPECTED_GROUPS = [
     "AI",
@@ -157,14 +157,14 @@ class IOSWorkingProfileTests(unittest.TestCase):
                 errors.append(f"ios-working: possible secret on line {line_number}")
         self.assertEqual(errors, [])
 
-    def test_remote_source_checker_includes_the_published_profile(self):
-        self.assertIn(PROFILE, check_remote_sources.CONFIG_PATHS)
+    def test_remote_source_checker_excludes_archived_profiles(self):
+        self.assertNotIn(PROFILE, check_remote_sources.CONFIG_PATHS)
         sources, errors = check_remote_sources.collect_sources()
         self.assertEqual(errors, [])
         references = [reference for source in sources.values() for reference in source.references]
         self.assertEqual(
             sum(reference.startswith(f"{PROFILE.name}:") for reference in references),
-            18,
+            0,
         )
 
 
