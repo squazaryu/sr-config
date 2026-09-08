@@ -8,6 +8,19 @@ ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE = ROOT / "archive/2026-09-08"
 AI = "AI = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
 FINLAND = "FINLAND = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,interval=300,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
+FEATHER_DOMAINS = (
+    "getutm.app",
+    "fastsign.dev",
+    "apptesters.org",
+    "hottubapp.io",
+    "stikdebug.xyz",
+)
+FEATHER_RULES = tuple(
+    f"DOMAIN-SUFFIX,{domain},FINLAND" for domain in FEATHER_DOMAINS
+)
+LEGACY_FEATHER_RULES = tuple(
+    f"DOMAIN-SUFFIX,{domain},DIRECT" for domain in FEATHER_DOMAINS
+)
 
 
 class ProfileRoleTests(unittest.TestCase):
@@ -40,14 +53,20 @@ class ProfileRoleTests(unittest.TestCase):
                 line = FINLAND
             elif line == "DOMAIN-SUFFIX,platipomiru.com,PROXY":
                 line = "DOMAIN-SUFFIX,platipomiru.com,TELEGRAM"
+            elif line in LEGACY_FEATHER_RULES:
+                line = line.rsplit(",", 1)[0] + ",FINLAND"
             expected.append(line)
         self.assertEqual(self.text, "\n".join(expected) + "\n")
 
     def test_all_rules_keep_order_and_options(self):
         original = validation.meaningful(validation.section_lines(self.reference.splitlines(), "[Rule]"))
-        original = ["DOMAIN-SUFFIX,platipomiru.com,TELEGRAM"
-                    if rule == "DOMAIN-SUFFIX,platipomiru.com,PROXY" else rule
-                    for rule in original]
+        original = [
+            "DOMAIN-SUFFIX,platipomiru.com,TELEGRAM"
+            if rule == "DOMAIN-SUFFIX,platipomiru.com,PROXY"
+            else (rule.rsplit(",", 1)[0] + ",FINLAND"
+                  if rule in LEGACY_FEATHER_RULES else rule)
+            for rule in original
+        ]
         self.assertEqual(self.rules, original)
         self.assertEqual(sum(rule.startswith("RULE-SET,") for rule in self.rules), 18)
 
@@ -78,6 +97,8 @@ class ProfileRoleTests(unittest.TestCase):
         self.assertNotIn("FINLAND", groups["AI"])
         self.assertEqual(len(groups["AI"]), 4)
         self.assertEqual(len(groups["FINLAND"]), 2)
+        for rule in FEATHER_RULES:
+            self.assertIn(rule, self.rules)
         def walk(name, stack):
             self.assertNotIn(name, stack, "group cycle")
             for member in groups[name]:
@@ -98,7 +119,8 @@ class ProfileRoleTests(unittest.TestCase):
     def test_validator_rejects_late_or_missing_early_service_rules(self):
         for rule in ("DOMAIN-SUFFIX,chatgpt.com,AI", "DOMAIN,challenges.cloudflare.com,AI",
                      "DOMAIN-SUFFIX,icloud.com,DIRECT", "DOMAIN-SUFFIX,ru,DIRECT",
-                     "DOMAIN-SUFFIX,platipomiru.com,TELEGRAM"):
+                     "DOMAIN-SUFFIX,platipomiru.com,TELEGRAM",
+                     *FEATHER_RULES):
             changed = self.text.replace(rule + "\n", "", 1)
             self.assertTrue(self.errors_for(changed))
             self.assertTrue(self.errors_for(changed.replace("FINAL,PROXY", rule + "\nFINAL,PROXY")))
