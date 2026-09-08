@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Каталоги Feather (getutm.app, fastsign.dev, apptesters.org,
+  hottubapp.io, stikdebug.xyz) переведены с DIRECT на существующую
+  финскую группу FINLAND: прямые соединения к части доменов были медленными
+  или зависали.
 - В основном iOS правило platipomiru.com переведено из PROXY в TELEGRAM:
   мини-приложение «Плати по миру» теперь следует выбранной группе Telegram.
 - Основной iOS заменён экспортом пользователя от 2026-09-08 19:25:40.
