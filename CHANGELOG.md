@@ -2,9 +2,15 @@
 
 ## [Unreleased]
 
+- В основном iOS добавлена отдельная группа INSTAGRAM по схеме YouTube;
+  домены, ASN и CIDR Meta переведены с SERVERS в эту группу с прокси-выбором
+  по умолчанию.
+- Встроены дополнительные AI-вспомогательные маршруты для Feature Gates,
+  Segment, Statsig, Feature Assets, Product Registry и LiveKit.
+- Fallback пересобран из актуального reject.txt: 8752 → 8760 правил.
 - Каталоги Feather (getutm.app, fastsign.dev, apptesters.org,
-  hottubapp.io, stikdebug.xyz) переведены с DIRECT на существующую
-  финскую группу FINLAND: прямые соединения к части доменов были медленными
+  hottubapp.io, stikdebug.xyz) переведены с DIRECT на PROXY:
+  прямые соединения к части доменов были медленными
   или зависали.
 - В основном iOS правило platipomiru.com переведено из PROXY в TELEGRAM:
   мини-приложение «Плати по миру» теперь следует выбранной группе Telegram.
