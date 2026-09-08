@@ -75,6 +75,47 @@ class CurrentServiceRouteTests(unittest.TestCase):
             "tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
         )
 
+    def test_instagram_isolated_group_routes_all_meta_rules_through_proxy(self):
+        self.assertEqual(
+            self.groups.get("INSTAGRAM"),
+            "select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=AUTO",
+        )
+        meta_rules = [
+            rule for rule in self.rules
+            if rule.startswith((
+                "DOMAIN-SUFFIX,instagram.com,",
+                "DOMAIN-SUFFIX,instagr.am,",
+                "DOMAIN-SUFFIX,cdninstagram.com,",
+                "DOMAIN-SUFFIX,ig.",
+                "DOMAIN-SUFFIX,igcdn.com,",
+                "DOMAIN-SUFFIX,igsonar.com,",
+                "DOMAIN-SUFFIX,igtv.com,",
+                "DOMAIN-SUFFIX,facebook.com,",
+                "DOMAIN-SUFFIX,facebook.net,",
+                "DOMAIN-SUFFIX,fb.",
+                "DOMAIN-SUFFIX,fbcdn.com,",
+                "DOMAIN-SUFFIX,fbcdn.net,",
+                "DOMAIN-SUFFIX,fbsbx",
+                "DOMAIN-SUFFIX,meta.com,",
+                "DOMAIN-SUFFIX,messenger.com,",
+                "DOMAIN-SUFFIX,m.me,",
+                "DOMAIN-SUFFIX,threads.net,",
+                "DOMAIN-SUFFIX,fbcdn-a.akamaihd.net,",
+                "DOMAIN-KEYWORD,instagram,",
+                "IP-ASN,32934,",
+                "IP-ASN,63293,",
+                "IP-CIDR,31.13.64.0/18,",
+                "IP-CIDR,129.134.0.0/17,",
+                "IP-CIDR,157.240.0.0/17,",
+                "IP-CIDR,173.252.64.0/18,",
+                "IP-CIDR6,2A03:2880::/32,",
+            ))
+        ]
+        self.assertEqual(len(meta_rules), 28)
+        for rule in meta_rules:
+            with self.subTest(rule=rule):
+                self.assertEqual(rule.split(",")[2], "INSTAGRAM")
+
     def test_instagram_has_a_separate_proxy_group(self):
         self.assertEqual(
             self.groups.get("INSTAGRAM"),
