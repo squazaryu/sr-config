@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class AIRoutingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.text = (ROOT / "url-set-ios-ai-routing.conf").read_text(encoding="utf-8")
+        cls.text = (ROOT / "archive/2026-09-08/url-set-ios-ai-routing.conf").read_text(encoding="utf-8")
         cls.lines = cls.text.splitlines()
         cls.rules = validation.meaningful(validation.section_lines(cls.lines, "[Rule]"))
 
@@ -25,7 +25,7 @@ class AIRoutingTests(unittest.TestCase):
         without_direct = without_direct.replace("GEOIP,RU,DIRECT", zones + "GEOIP,RU,DIRECT", 1)
         before, rest = without_direct.split("# BEGIN CHATGPT ROUTING\n", 1)
         block, after = rest.split("# END CHATGPT ROUTING\n\n", 1)
-        baseline = (ROOT / "url-set-ios-working.conf").read_text(encoding="utf-8")
+        baseline = (ROOT / "archive/2026-09-08/url-set-ios-working.conf").read_text(encoding="utf-8")
         update_url = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios-ai-routing.conf"
         expected_finland = "FINLAND = url-test,🇫🇮 ALL VPN | ФИНЛЯНДИЯ,🇫🇮 SODA VPN | ФИНЛЯНДИЯ,🇫🇮 ДАРВИН ВПН | ФИНЛЯНДИЯ,🇫🇮 FASTCOM VPN | ФИНЛЯНДИЯ,🇫🇮 HIT VPN | ФИНЛЯНДИЯ,🇫🇮 PROXY TG | ФИНЛЯНДИЯ,FINLAND 🇫🇮,policy-select-name=🇫🇮 ALL VPN | ФИНЛЯНДИЯ,interval=300,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
         self.assertEqual(self.lines.count(update_url), 1)

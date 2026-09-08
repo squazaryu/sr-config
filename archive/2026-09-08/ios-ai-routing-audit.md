@@ -1,5 +1,8 @@
 # iOS AI routing revision — 2026-09-08
 
+Archived historical report. The installation/update instructions below describe
+the earlier experiment; use the current root url-set-ios.conf for active iOS.
+
 Import as a new profile:
 
 https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios-ai-routing.conf
