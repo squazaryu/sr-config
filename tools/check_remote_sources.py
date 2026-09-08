@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATHS = (
     ROOT / "url-set-ios.conf",
     ROOT / "url-set-ios-working.conf",
+    ROOT / "url-set-ios-ai-routing.conf",
     ROOT / "url-set-macos.conf",
 )
 FETCH_TIMEOUT = 30
