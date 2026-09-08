@@ -16,8 +16,14 @@ class AIRoutingTests(unittest.TestCase):
         cls.lines = cls.text.splitlines()
         cls.rules = validation.meaningful(validation.section_lines(cls.lines, "[Rule]"))
 
-    def test_changes_are_confined_to_header_and_early_chatgpt_block(self):
-        before, rest = self.text.split("# BEGIN CHATGPT ROUTING\n", 1)
+    def test_changes_are_confined_to_header_and_scoped_routing_blocks(self):
+        before_direct, direct_rest = self.text.split("# BEGIN APPLE AND RU DIRECT\n", 1)
+        direct_block, after_direct = direct_rest.split("# END APPLE AND RU DIRECT\n\n", 1)
+        without_direct = before_direct + after_direct
+        zones = "".join(f"DOMAIN-SUFFIX,{zone},DIRECT\n"
+                        for zone in ("ru", "su", "рф", "moscow", "tatar"))
+        without_direct = without_direct.replace("GEOIP,RU,DIRECT", zones + "GEOIP,RU,DIRECT", 1)
+        before, rest = without_direct.split("# BEGIN CHATGPT ROUTING\n", 1)
         block, after = rest.split("# END CHATGPT ROUTING\n\n", 1)
         restored = before.replace(
             "# iOS AI routing revision 2026-09-08; based on url-set-ios-working.conf.\n"
@@ -26,6 +32,7 @@ class AIRoutingTests(unittest.TestCase):
         ) + after
         self.assertEqual(restored, (ROOT / "url-set-ios-working.conf").read_text(encoding="utf-8"))
         self.assertTrue(block.strip())
+        self.assertTrue(direct_block.strip())
 
     def test_core_and_auxiliary_routes_precede_all_remote_and_geoip_rules(self):
         boundary = min(i for i, rule in enumerate(self.rules)
@@ -73,6 +80,23 @@ class AIRoutingTests(unittest.TestCase):
         self.assertIn("DOMAIN,mesu.apple.com,DIRECT", self.rules)
         self.assertIn("DOMAIN,ocsp2.apple.com,DIRECT", self.rules)
         self.assertEqual(self.rules[-1], "FINAL,PROXY")
+
+    def test_logged_apple_and_russian_hosts_have_early_inline_direct_routes(self):
+        boundary = next(i for i, rule in enumerate(self.rules) if rule.startswith("RULE-SET,"))
+        for host in ("gateway.icloud.com", "metrics.icloud.com", "mesu.apple.com",
+                     "ocsp2.apple.com", "appstorrent.ru", "suggest.yandex.net"):
+            matches = []
+            for rule in self.rules[:boundary]:
+                fields = rule.split(",")
+                if fields[0] == "DOMAIN" and fields[1] == host:
+                    matches.append(fields[2])
+                elif fields[0] == "DOMAIN-SUFFIX" and (
+                    host == fields[1] or host.endswith("." + fields[1])
+                ):
+                    matches.append(fields[2])
+            with self.subTest(host=host):
+                self.assertTrue(matches)
+                self.assertEqual(matches[0], "DIRECT")
 
 
 if __name__ == "__main__":

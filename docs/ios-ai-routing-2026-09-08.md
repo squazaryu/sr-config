@@ -5,9 +5,10 @@ Import as a new profile:
 https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios-ai-routing.conf
 
 This profile derives from the user's September 8 working snapshot. All existing
-groups, candidates, defaults, DNS, IPv6, Apple routes, Russian DIRECT rules and
-external sources are retained. Only the header and an early ChatGPT rule block
-are added. The original snapshot and the main iOS/macOS/fallback files are unchanged.
+groups, candidates, defaults, DNS, IPv6 and external sources are retained.
+Early blocks add ChatGPT routing and inline Apple/known Russian DIRECT coverage.
+Russian domain-zone DIRECT rules move to the early block. The original snapshot
+and the main iOS/macOS/fallback files are unchanged.
 There is no embedded update-url; existing remote RULE-SET sources remain external.
 
 ## Evidence from the three supplied request journals
@@ -45,6 +46,11 @@ of the regional response.
 
 ## Changes and limits
 
+- Apple/iCloud and known Russian service domains are inline DIRECT before remote
+  lists; Russian suffix rules move here as well. Non-Russian domain zones used by
+  known Russian services are copied from the existing Russian domain list.
+  This preserves the requested distinction: AI and Spotify use their Finnish
+  pools while iCloud and Russian services use DIRECT.
 - Inline OpenAI/ChatGPT domain routes precede remote lists and GEOIP, so core
   routing does not depend on downloading the AI RULE-SET.
 - Auxiliary destinations are mapped to the same AI group using the
