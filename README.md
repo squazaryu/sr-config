@@ -2,6 +2,24 @@
 
 Конфиги для [Shadowrocket](https://apps.apple.com/app/shadowrocket/id932747118).
 
+## iOS: AI без промежуточной FINLAND — отдельный тест
+
+[url-set-ios-ai-flat-test.conf](https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios-ai-flat-test.conf)
+содержит пользовательский экспорт от 2026-09-08 15:00:24. Единственное отличие
+от присланного текста — собственный update-url этого теста.
+
+AI непосредственно выбирает между семью кандидатами через url-test
+(interval=600, tolerance=100, timeout=5, проверка gstatic); FINLAND не входит
+в кандидаты AI. SPOTIFY использует шесть кандидатов из экспорта.
+Остальные группы и правила, включая ранний Apple/RU DIRECT и точечную
+блокировку ChatGPT QUIC, сохранены. Существующий ai-routing не заменяется.
+
+Импортировать отдельным профилем, выбрать «Конфигурация», переподключить VPN
+и проверить ChatGPT сразу и после паузы. AI по-прежнему может переключать узлы:
+этот тест проверяет прямой автоматический пул, а не закреплённый ALL VPN.
+В сравнении с ai-routing изменились также интервал/порядок AI-кандидатов и
+состав SPOTIFY, поэтому успех сам по себе не докажет ошибку вложенных групп.
+
 ## iOS: проверка маршрута ChatGPT от 2026-09-08
 
 [url-set-ios-ai-routing.conf](https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios-ai-routing.conf)
