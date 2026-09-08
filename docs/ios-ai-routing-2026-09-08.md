@@ -4,12 +4,14 @@ Import as a new profile:
 
 https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios-ai-routing.conf
 
-This profile derives from the user's September 8 working snapshot. All existing
-groups, candidates, defaults, DNS, IPv6 and external sources are retained.
+This profile includes the user's 13:22:40 export from September 8.
+AI is select,FINLAND; FINLAND has seven candidates with ALL VPN first and
+policy-select-name set to ALL VPN. The user's own update-url points to this file.
+The other groups, DNS, IPv6 and external sources are retained.
 Early blocks add ChatGPT routing and inline Apple/known Russian DIRECT coverage.
 Russian domain-zone DIRECT rules move to the early block. The original snapshot
 and the main iOS/macOS/fallback files are unchanged.
-There is no embedded update-url; existing remote RULE-SET sources remain external.
+Existing remote RULE-SET sources remain external.
 
 ## Evidence from the three supplied request journals
 
@@ -66,7 +68,7 @@ of the regional response.
   See [Cloudflare HTTP/3 troubleshooting](https://developers.cloudflare.com/ssl/troubleshooting/err-ssl-protocol-error/).
 - There is no universal DST-PORT rule. HTTPS for other services retains its
   original routing, including Russian DIRECT.
-- FINLAND's existing automatic candidate pool is preserved. Its latency probe
+- FINLAND uses the user's seven-candidate automatic pool. Its latency probe
   measures gstatic reachability, not OpenAI regional acceptance. A node label
   does not establish its egress IP, and the profile cannot change a provider's
   server-side egress.

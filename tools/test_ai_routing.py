@@ -25,12 +25,21 @@ class AIRoutingTests(unittest.TestCase):
         without_direct = without_direct.replace("GEOIP,RU,DIRECT", zones + "GEOIP,RU,DIRECT", 1)
         before, rest = without_direct.split("# BEGIN CHATGPT ROUTING\n", 1)
         block, after = rest.split("# END CHATGPT ROUTING\n\n", 1)
-        restored = before.replace(
-            "# iOS AI routing revision 2026-09-08; based on url-set-ios-working.conf.\n"
-            "# Import as a separate profile. No embedded update-url.",
-            "# Shadowrocket: 2026-09-08 12:17:33",
-        ) + after
-        self.assertEqual(restored, (ROOT / "url-set-ios-working.conf").read_text(encoding="utf-8"))
+        baseline = (ROOT / "url-set-ios-working.conf").read_text(encoding="utf-8")
+        update_url = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios-ai-routing.conf"
+        expected_finland = "FINLAND = url-test,🇫🇮 ALL VPN | ФИНЛЯНДИЯ,🇫🇮 SODA VPN | ФИНЛЯНДИЯ,🇫🇮 ДАРВИН ВПН | ФИНЛЯНДИЯ,🇫🇮 FASTCOM VPN | ФИНЛЯНДИЯ,🇫🇮 HIT VPN | ФИНЛЯНДИЯ,🇫🇮 PROXY TG | ФИНЛЯНДИЯ,FINLAND 🇫🇮,policy-select-name=🇫🇮 ALL VPN | ФИНЛЯНДИЯ,interval=300,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
+        self.assertEqual(self.lines.count(update_url), 1)
+        self.assertIn("AI = select,FINLAND", self.lines)
+        self.assertIn(expected_finland, self.lines)
+        restored = (before + after).replace(update_url + "\n", "", 1)
+        restored = restored.replace("# Shadowrocket: 2026-09-08 13:22:40",
+                                    "# Shadowrocket: 2026-09-08 12:17:33", 1)
+        restored = restored.replace("AI = select,FINLAND\n",
+                                    "AI = select,FINLAND,policy-select-name=FINLAND\n", 1)
+        baseline_finland = next(line for line in baseline.splitlines()
+                                if line.startswith("FINLAND ="))
+        restored = restored.replace(expected_finland, baseline_finland, 1)
+        self.assertEqual(restored, baseline)
         self.assertTrue(block.strip())
         self.assertTrue(direct_block.strip())
 
