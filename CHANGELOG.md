@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Для iOS добавлена явная маршрутизация почты: IMAP и SMTP iCloud Mail,
+  Яндекса и Mail.ru идут через DIRECT, Gmail/Googlemail и Google OAuth —
+  через PROXY; широкие DST-PORT-правила не добавлялись.
 - В основном iOS добавлена отдельная группа INSTAGRAM по схеме YouTube;
   домены, ASN и CIDR Meta переведены с SERVERS в эту группу с прокси-выбором
   по умолчанию.
