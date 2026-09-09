@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- В iOS расширена FINLAND-группа: добавлены `FINLAND 42…-2`, `FINLAND 52…-2`
+  и `🇫🇮 ФИНЛЯНДИЯ | РЕКЛАМА НА ЮТУБЕ`; AI-пул и его порядок не менялись.
 - Для iOS добавлена явная маршрутизация почты: IMAP и SMTP iCloud Mail,
   Яндекса и Mail.ru идут через DIRECT, Gmail/Googlemail и Google OAuth —
   через PROXY; широкие DST-PORT-правила не добавлялись.
