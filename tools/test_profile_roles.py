@@ -64,6 +64,20 @@ FEATHER_RULES = tuple(
 LEGACY_FEATHER_RULES = tuple(
     f"DOMAIN-SUFFIX,{domain},DIRECT" for domain in FEATHER_DOMAINS
 )
+MAIL_RULES = (
+    "DOMAIN-SUFFIX,mail.me.com,DIRECT",
+    "DOMAIN-SUFFIX,mail.ru,DIRECT",
+    "DOMAIN-SUFFIX,yandex.com,DIRECT",
+    "DOMAIN-SUFFIX,gmail.com,PROXY",
+    "DOMAIN-SUFFIX,googlemail.com,PROXY",
+    "DOMAIN,accounts.google.com,PROXY",
+)
+MAIL_BLOCK = (
+    "",
+    "# Почта: явные маршруты для IMAP и SMTP. Доменные правила покрывают",
+    "# стандартные порты 993, 465 и 587 без широких DST-PORT-переопределений.",
+    *MAIL_RULES,
+)
 
 
 class ProfileRoleTests(unittest.TestCase):
@@ -106,6 +120,8 @@ class ProfileRoleTests(unittest.TestCase):
                 fields[2] = "INSTAGRAM"
                 line = ",".join(fields)
             expected.append(line)
+            if line == "DOMAIN-SUFFIX,aviasales.com,DIRECT":
+                expected.extend(MAIL_BLOCK)
             if line == "DOMAIN-SUFFIX,ct.sendgrid.net,AI":
                 expected.extend(ADDED_AI_RULES)
             if line == "DOMAIN,workos.imgix.net,AI":
@@ -125,6 +141,8 @@ class ProfileRoleTests(unittest.TestCase):
                 fields[2] = "INSTAGRAM"
                 rule = ",".join(fields)
             updated.append(rule)
+            if rule == "DOMAIN-SUFFIX,aviasales.com,DIRECT":
+                updated.extend(MAIL_RULES)
             if rule == "DOMAIN-SUFFIX,ct.sendgrid.net,AI":
                 updated.extend(ADDED_AI_RULES)
             if rule == "DOMAIN,workos.imgix.net,AI":
