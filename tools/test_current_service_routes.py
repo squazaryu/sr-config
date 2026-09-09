@@ -75,6 +75,27 @@ class CurrentServiceRouteTests(unittest.TestCase):
             "tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
         )
 
+    def test_mail_provider_domains_have_explicit_smtp_and_imap_routes(self):
+        expected_direct = (
+            "DOMAIN-SUFFIX,mail.me.com,DIRECT",
+            "DOMAIN-SUFFIX,mail.ru,DIRECT",
+            "DOMAIN-SUFFIX,yandex.com,DIRECT",
+        )
+        expected_proxy = (
+            "DOMAIN-SUFFIX,gmail.com,PROXY",
+            "DOMAIN-SUFFIX,googlemail.com,PROXY",
+            "DOMAIN,accounts.google.com,PROXY",
+        )
+        for rule in expected_direct + expected_proxy:
+            with self.subTest(rule=rule):
+                self.assertIn(rule, self.rules)
+
+        boundary = next(i for i, rule in enumerate(self.rules)
+                        if rule.startswith(("RULE-SET,", "GEOIP,")))
+        for rule in expected_direct + expected_proxy:
+            with self.subTest(position=rule):
+                self.assertIn(rule, self.rules[:boundary])
+
     def test_instagram_isolated_group_routes_all_meta_rules_through_proxy(self):
         self.assertEqual(
             self.groups.get("INSTAGRAM"),
