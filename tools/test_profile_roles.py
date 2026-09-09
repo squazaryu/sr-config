@@ -7,7 +7,7 @@ import validate_configs as validation
 ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE = ROOT / "archive/2026-09-08"
 AI = "AI = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
-FINLAND = "FINLAND = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,interval=300,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
+FINLAND = "FINLAND = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,🇫🇮 ФИНЛЯНДИЯ | РЕКЛАМА НА ЮТУБЕ,policy-select-name=FINLAND 🇫🇮,interval=300,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
 INSTAGRAM = "INSTAGRAM = select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=AUTO"
 ADDED_AI_RULES = (
     "DOMAIN-SUFFIX,featuregates.org,AI",
@@ -177,7 +177,7 @@ class ProfileRoleTests(unittest.TestCase):
         self.assertEqual(len(groups), 11)
         self.assertNotIn("FINLAND", groups["AI"])
         self.assertEqual(len(groups["AI"]), 4)
-        self.assertEqual(len(groups["FINLAND"]), 2)
+        self.assertEqual(len(groups["FINLAND"]), 5)
         self.assertEqual(groups["INSTAGRAM"], ["SERVERS", "PROXY", "AUTO", "FINLAND", "DIRECT"])
         for rule in FEATHER_RULES:
             self.assertIn(rule, self.rules)
