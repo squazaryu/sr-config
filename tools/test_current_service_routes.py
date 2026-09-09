@@ -75,6 +75,17 @@ class CurrentServiceRouteTests(unittest.TestCase):
             "tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
         )
 
+    def test_finland_pool_contains_the_user_added_nodes(self):
+        self.assertEqual(
+            self.groups["FINLAND"],
+            "url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,"
+            "FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,"
+            "FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,"
+            "🇫🇮 ФИНЛЯНДИЯ | РЕКЛАМА НА ЮТУБЕ,"
+            "policy-select-name=FINLAND 🇫🇮,interval=300,tolerance=100,"
+            "timeout=5,url=http://www.gstatic.com/generate_204",
+        )
+
     def test_mail_provider_domains_have_explicit_smtp_and_imap_routes(self):
         expected_direct = (
             "DOMAIN-SUFFIX,mail.me.com,DIRECT",
