@@ -49,10 +49,22 @@ class HybridProfileTests(unittest.TestCase):
         )
 
     def test_groups_and_rules_are_copied_from_primary_ios(self):
-        self.assertEqual(section(self.hybrid, "[Proxy Group]"),
-                         section(self.primary, "[Proxy Group]"))
         self.assertEqual(section(self.hybrid, "[Rule]"),
                          section(self.primary, "[Rule]"))
+        hybrid_groups = section(self.hybrid, "[Proxy Group]")
+        primary_groups = section(self.primary, "[Proxy Group]")
+        self.assertEqual(
+            [line for line in hybrid_groups if not line.startswith("AI =")],
+            [line for line in primary_groups if not line.startswith("AI =")],
+        )
+        self.assertEqual(
+            next(line for line in hybrid_groups if line.startswith("AI =")),
+            "AI = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,"
+            "FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,"
+            "FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,"
+            "interval=600,tolerance=100,timeout=5,"
+            "url=http://www.gstatic.com/generate_204",
+        )
 
     def test_hybrid_is_not_an_auto_updating_primary_profile(self):
         self.assertFalse(any(line.startswith("update-url =")

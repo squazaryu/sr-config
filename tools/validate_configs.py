@@ -317,12 +317,14 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     if fallback.count(main_update) != 1:
         fail(errors, "main: fallback должен содержать ровно один main update-url")
     general = meaningful(section_lines(ios_lines, "[General]"))
-    if any(line.startswith("update-url") for line in general):
-        fail(errors, "ios: пользовательский профиль сохранён без update-url")
+    ios_update = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios.conf"
+    update_lines = [line for line in general if line.startswith("update-url")]
+    if update_lines != [ios_update]:
+        fail(errors, "ios: должен быть ровно один update-url на основной iOS-профиль")
     groups = dict(line.split("=", 1) for line in meaningful(section_lines(ios_lines, "[Proxy Group]")) if "=" in line)
     groups = {name.strip(): value.strip() for name, value in groups.items()}
     for required in (
-        "AI = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
+        "AI = url-test,FINLAND,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
         "FINLAND = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,🇫🇮 ФИНЛЯНДИЯ | РЕКЛАМА НА ЮТУБЕ,policy-select-name=FINLAND 🇫🇮,interval=300,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
         "INSTAGRAM = select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=AUTO",
     ):
