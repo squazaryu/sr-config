@@ -1,11 +1,11 @@
-"""Verify the single-node AI canary differs only in its AI group."""
+"""Verify the single-node ALL VPN AI canary differs only in its AI group."""
 from pathlib import Path
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
 HYBRID = ROOT / "archive/2026-09-10/url-set-ios-hybrid-test.conf"
-FIXED = ROOT / "archive/2026-09-10/url-set-ios-ai-fixed-finland-test.conf"
+FIXED = ROOT / "archive/2026-09-10/url-set-ios-ai-all-vpn-test.conf"
 
 
 def section(text, name):
@@ -19,16 +19,16 @@ def section(text, name):
     return result
 
 
-class FixedAIProfileTests(unittest.TestCase):
+class AllVPNAIProfileTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.hybrid = HYBRID.read_text(encoding="utf-8")
         cls.fixed = FIXED.read_text(encoding="utf-8")
 
-    def test_fixed_profile_exists_and_uses_one_finnish_node(self):
+    def test_fixed_profile_exists_and_uses_one_known_unstable_node(self):
         groups = section(self.fixed, "[Proxy Group]")
         ai = next(line for line in groups if line.startswith("AI ="))
-        self.assertEqual(ai, "AI = select,FINLAND 🇫🇮,policy-select-name=FINLAND 🇫🇮")
+        self.assertEqual(ai, "AI = select,🇫🇮 ALL VPN | ФИНЛЯНДИЯ,policy-select-name=🇫🇮 ALL VPN | ФИНЛЯНДИЯ")
         self.assertNotIn("PROXY", ai)
 
     def test_fixed_profile_keeps_reference_general_and_all_rules(self):

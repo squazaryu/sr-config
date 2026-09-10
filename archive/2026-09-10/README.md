@@ -16,10 +16,10 @@ https://raw.githubusercontent.com/squazaryu/sr-config/main/archive/2026-09-10/ur
 The test keeps our AI group and Finnish candidates. It does not prove the
 provider's egress country; use Cloudflare trace or a route log for that.
 
-Single-node canary:
+Known-unstable-node canary:
 
-https://raw.githubusercontent.com/squazaryu/sr-config/main/archive/2026-09-10/url-set-ios-ai-fixed-finland-test.conf
+https://raw.githubusercontent.com/squazaryu/sr-config/main/archive/2026-09-10/url-set-ios-ai-all-vpn-test.conf
 
-The single-node canary changes only AI from url-test to the exact
-FINLAND 🇫🇮 entry. It is used to distinguish candidate switching from
-provider-side egress changes.
+The canary changes only AI from url-test to the exact
+🇫🇮 ALL VPN | ФИНЛЯНДИЯ entry. This entry was selected because earlier
+independent checks observed both Finnish and Russian egress from it.
