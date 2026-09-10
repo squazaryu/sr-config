@@ -86,6 +86,20 @@ class CurrentServiceRouteTests(unittest.TestCase):
             "timeout=5,url=http://www.gstatic.com/generate_204",
         )
 
+    def test_ai_delegates_to_the_finland_group(self):
+        self.assertEqual(
+            self.groups["AI"],
+            "url-test,FINLAND,interval=600,tolerance=100,timeout=5,"
+            "url=http://www.gstatic.com/generate_204",
+        )
+
+    def test_ai_delegates_to_the_finland_group(self):
+        self.assertEqual(
+            self.groups["AI"],
+            "url-test,FINLAND,interval=600,tolerance=100,timeout=5,"
+            "url=http://www.gstatic.com/generate_204",
+        )
+
     def test_mail_provider_domains_have_explicit_smtp_and_imap_routes(self):
         expected_direct = (
             "DOMAIN-SUFFIX,mail.me.com,DIRECT",
