@@ -5,7 +5,6 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 HYBRID = ROOT / "archive/2026-09-10/url-set-ios-hybrid-test.conf"
-PRIMARY = ROOT / "url-set-ios.conf"
 
 
 def section(text, name):
@@ -23,7 +22,6 @@ class HybridProfileTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.hybrid = HYBRID.read_text(encoding="utf-8")
-        cls.primary = PRIMARY.read_text(encoding="utf-8")
 
     def test_general_is_the_reference_profile(self):
         self.assertEqual(
@@ -48,15 +46,9 @@ class HybridProfileTests(unittest.TestCase):
             ],
         )
 
-    def test_groups_and_rules_are_copied_from_primary_ios(self):
-        self.assertEqual(section(self.hybrid, "[Rule]"),
-                         section(self.primary, "[Rule]"))
+    def test_hybrid_keeps_its_explicit_ai_override_and_frozen_rules(self):
         hybrid_groups = section(self.hybrid, "[Proxy Group]")
-        primary_groups = section(self.primary, "[Proxy Group]")
-        self.assertEqual(
-            [line for line in hybrid_groups if not line.startswith("AI =")],
-            [line for line in primary_groups if not line.startswith("AI =")],
-        )
+        hybrid_rules = section(self.hybrid, "[Rule]")
         self.assertEqual(
             next(line for line in hybrid_groups if line.startswith("AI =")),
             "AI = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,"
@@ -65,6 +57,9 @@ class HybridProfileTests(unittest.TestCase):
             "interval=600,tolerance=100,timeout=5,"
             "url=http://www.gstatic.com/generate_204",
         )
+        self.assertIn("DOMAIN-SUFFIX,chatgpt.com,AI", hybrid_rules)
+        self.assertIn("GEOIP,RU,DIRECT", hybrid_rules)
+        self.assertEqual(hybrid_rules[-1], "FINAL,PROXY")
 
     def test_hybrid_is_not_an_auto_updating_primary_profile(self):
         self.assertFalse(any(line.startswith("update-url =")

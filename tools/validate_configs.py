@@ -310,7 +310,9 @@ def validate_special_cases(lines_by_name: dict[str, list[str]], errors: list[str
 
 
 def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: list[str]) -> None:
-    # User-approved September 8 iOS profile; fallback remains independent.
+    # The primary iOS profile is intentionally grouped, but its matching and
+    # fallback surface must remain small. The self-contained fallback remains
+    # independently validated below.
     main_update = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-main.conf"
     fallback = lines_by_name["main"]
     ios_lines = lines_by_name["ios"]
@@ -322,12 +324,16 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     if update_lines != [ios_update]:
         fail(errors, "ios: должен быть ровно один update-url на основной iOS-профиль")
     tun_routes = next((line for line in general if line.startswith("tun-excluded-routes =")), "")
-    if "ff02::fb/128" not in tun_routes.split("=", 1)[-1].split(","):
-        fail(errors, "ios: IPv6 mDNS ff02::fb/128 должен быть исключён из TUN")
+    if "ff02::fb/128" in tun_routes.split("=", 1)[-1].split(","):
+        fail(errors, "ios: экспериментальное IPv6 mDNS-исключение не должно входить в основной профиль")
+    if any(line.startswith("block-quic =") for line in general):
+        fail(errors, "ios: экспериментальная глобальная настройка block-quic не должна входить в основной профиль")
+    if any(line.startswith("always-real-ip =") and "*.cloudflareclient.com" in line for line in general):
+        fail(errors, "ios: *.cloudflareclient.com не относится к маршрутизации этого профиля")
     groups = dict(line.split("=", 1) for line in meaningful(section_lines(ios_lines, "[Proxy Group]")) if "=" in line)
     groups = {name.strip(): value.strip() for name, value in groups.items()}
     for required in (
-        "AI = url-test,FINLAND,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
+        "AI = select,FINLAND,policy-select-name=FINLAND",
         "FINLAND = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,🇫🇮 ФИНЛЯНДИЯ | РЕКЛАМА НА ЮТУБЕ,policy-select-name=FINLAND 🇫🇮,interval=300,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
         "INSTAGRAM = select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=AUTO",
     ):
@@ -335,10 +341,12 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
         if groups.get(name) != value:
             fail(errors, f"ios: изменён утверждённый состав или параметры группы {name}")
     rules = meaningful(section_lines(ios_lines, "[Rule]"))
-    boundary = next((i for i, rule in enumerate(rules) if rule.startswith(("RULE-SET,", "GEOIP,"))), len(rules))
+    boundary = next((i for i, rule in enumerate(rules) if rule.startswith("RULE-SET,")), len(rules))
     for required in (
         "DOMAIN-SUFFIX,chatgpt.com,AI",
         "DOMAIN-SUFFIX,openai.com,AI",
+        "DOMAIN-SUFFIX,oaistatic.com,AI",
+        "DOMAIN-SUFFIX,oaiusercontent.com,AI",
         "DOMAIN,challenges.cloudflare.com,AI",
         "DOMAIN-SUFFIX,icloud.com,DIRECT",
         "DOMAIN-SUFFIX,apple.com,DIRECT",
@@ -360,15 +368,17 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     ):
         if rules.count(required) != 1 or rules.index(required) >= boundary:
             fail(errors, f"ios: отсутствует или смещено раннее правило {required}")
-    for domain in ("chatgpt.com", "openai.com", "oaistatic.com", "oaiusercontent.com"):
-        guard = f"AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,{domain})),REJECT-NO-DROP"
-        route = f"DOMAIN-SUFFIX,{domain},AI"
-        if guard not in rules or route not in rules or rules.index(guard) >= rules.index(route):
-            fail(errors, f"ios: нарушен порядок QUIC/AI для {domain}")
-    if any(rule.startswith("DST-PORT,") for rule in rules):
-        fail(errors, "ios: недопустимое широкое правило по порту во встроенном блоке")
-    if "GEOIP,RU,DIRECT" not in rules or not rules or rules[-1] != "FINAL,PROXY":
-        fail(errors, "ios: нарушены GEOIP DIRECT / FINAL PROXY")
+    for rule in rules:
+        if rule.startswith("AND,") or rule.startswith("DST-PORT,"):
+            fail(errors, f"ios: транспортное/портовое правило удалено из минимального профиля: {rule}")
+        if rule.startswith("RULE-SET,https://") and (
+            "misha-tgshv/" in rule or "helmiau/" in rule
+        ):
+            fail(errors, f"ios: широкое стороннее RULE-SET удалено из основного профиля: {rule}")
+    if "GEOIP,RU,DIRECT" in rules:
+        fail(errors, "ios: GEOIP,RU,DIRECT удалён, чтобы IP-only AI-соединение не обходило AI-политику")
+    if not rules or rules[-1] != "FINAL,PROXY":
+        fail(errors, "ios: нарушен FINAL,PROXY")
 
     # Keep independent critical-service guards on the self-contained fallback.
     main_lines = [line.strip() for line in fallback]

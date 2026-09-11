@@ -105,7 +105,6 @@ class SimplifiedIOSRoutingTests(unittest.TestCase):
             "DOMAIN-SUFFIX,openai.com,AI",
             "DOMAIN-SUFFIX,oaistatic.com,AI",
             "DOMAIN-SUFFIX,oaiusercontent.com,AI",
-            "DOMAIN-SUFFIX,chatgpt.livekit.cloud,AI",
             "DOMAIN,challenges.cloudflare.com,AI",
             "DOMAIN-SUFFIX,ru,DIRECT",
             "DOMAIN-SUFFIX,su,DIRECT",
@@ -132,6 +131,7 @@ class SimplifiedIOSRoutingTests(unittest.TestCase):
             line for line in section(self.lines, "[General]")
             if line.startswith("always-real-ip =")
         ))
+
 
     def test_preserves_spotify_and_service_group_controls(self):
         self.assertEqual(

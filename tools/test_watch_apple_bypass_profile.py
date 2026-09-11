@@ -4,7 +4,6 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PRIMARY = ROOT / "url-set-ios.conf"
 PROFILE = ROOT / "archive/2026-09-11/url-set-ios-watch-apple-bypass-test.conf"
 
 
@@ -23,7 +22,6 @@ class WatchAppleBypassProfileTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.profile = PROFILE.read_text(encoding="utf-8")
-        cls.primary = PRIMARY.read_text(encoding="utf-8")
 
     def test_apple_domains_bypass_shadowrocket_proxy_processing(self):
         skip_proxy = next(line for line in section(self.profile, "[General]")
@@ -45,11 +43,14 @@ class WatchAppleBypassProfileTests(unittest.TestCase):
         for value in ("::1/128", "fe80::/10", "ff02::fb/128"):
             self.assertIn(value, values)
 
-    def test_groups_and_rules_match_the_primary_profile(self):
-        self.assertEqual(section(self.profile, "[Proxy Group]"),
-                         section(self.primary, "[Proxy Group]"))
-        self.assertEqual(section(self.profile, "[Rule]"),
-                         section(self.primary, "[Rule]"))
+    def test_canary_keeps_the_previous_routing_contract(self):
+        self.assertIn(
+            "AI = url-test,FINLAND,interval=600,tolerance=100,timeout=5,"
+            "url=http://www.gstatic.com/generate_204",
+            section(self.profile, "[Proxy Group]"),
+        )
+        self.assertIn("DOMAIN-SUFFIX,chatgpt.com,AI", section(self.profile, "[Rule]"))
+        self.assertIn("FINAL,PROXY", section(self.profile, "[Rule]"))
 
 
 if __name__ == "__main__":
