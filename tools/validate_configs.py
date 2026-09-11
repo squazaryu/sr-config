@@ -199,13 +199,14 @@ def validate_general(name: str, lines: list[str], errors: list[str]) -> None:
     general = "\n".join(section_lines(lines, "[General]"))
     for required in (
         "dns-direct-system = true",
-        "17.0.0.0/8",
         "apple-cloudkit.com",
         "apple-livephotoskit.com",
         "apple-dns.net",
     ):
         if required not in general:
             fail(errors, f"{name}: в [General] отсутствует обязательная настройка: {required}")
+    if name in {"main", "macos"} and "17.0.0.0/8" not in general:
+        fail(errors, f"{name}: в [General] отсутствует обязательная настройка: 17.0.0.0/8")
 
 
 def validate_apple_watch_rules(name: str, lines: list[str], errors: list[str]) -> None:
@@ -326,6 +327,8 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     tun_routes = next((line for line in general if line.startswith("tun-excluded-routes =")), "")
     if "ff02::fb/128" in tun_routes.split("=", 1)[-1].split(","):
         fail(errors, "ios: экспериментальное IPv6 mDNS-исключение не должно входить в основной профиль")
+    if "17.0.0.0/8" in tun_routes.split("=", 1)[-1].split(","):
+        fail(errors, "ios: Apple DIRECT не должен обходить TUN через широкое исключение 17.0.0.0/8")
     if any(line.startswith("block-quic =") for line in general):
         fail(errors, "ios: экспериментальная глобальная настройка block-quic не должна входить в основной профиль")
     if any(line.startswith("always-real-ip =") and "*.cloudflareclient.com" in line for line in general):
