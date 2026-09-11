@@ -10,6 +10,7 @@ AI = "AI = url-test,FINLAND,interval=600,tolerance=100,timeout=5,url=http://www.
 FINLAND = "FINLAND = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,🇫🇮 ФИНЛЯНДИЯ | РЕКЛАМА НА ЮТУБЕ,policy-select-name=FINLAND 🇫🇮,interval=300,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
 IOS_UPDATE = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios.conf"
 INSTAGRAM = "INSTAGRAM = select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=AUTO"
+TELEGRAM = "TELEGRAM = select,AUTO,PROXY,SERVERS,FINLAND,policy-select-name=PROXY"
 ADDED_AI_RULES = (
     "DOMAIN-SUFFIX,featuregates.org,AI",
     "DOMAIN-SUFFIX,segment.io,AI",
@@ -102,7 +103,7 @@ class ProfileRoleTests(unittest.TestCase):
         expected = []
         for line in self.reference.splitlines():
             if line.startswith("# Shadowrocket:"):
-                line = "# Shadowrocket: 2026-09-08 19:25:40"
+                line = "# Shadowrocket: 2026-09-11 22:50:53"
             elif line.startswith("update-url ="):
                 line = IOS_UPDATE
             elif line.startswith("tun-excluded-routes ="):
@@ -111,6 +112,8 @@ class ProfileRoleTests(unittest.TestCase):
                 line = AI
             elif line.startswith("FINLAND ="):
                 line = FINLAND
+            elif line.startswith("TELEGRAM ="):
+                line = TELEGRAM
             elif line.startswith("YOUTUBE ="):
                 expected.extend((line, INSTAGRAM))
                 continue
