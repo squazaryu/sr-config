@@ -346,6 +346,7 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     rules = meaningful(section_lines(ios_lines, "[Rule]"))
     boundary = next((i for i, rule in enumerate(rules) if rule.startswith("RULE-SET,")), len(rules))
     for required in (
+        "DOMAIN,apple-relay.fastly-edge.com,DIRECT",
         "DOMAIN-SUFFIX,chatgpt.com,AI",
         "DOMAIN-SUFFIX,openai.com,AI",
         "DOMAIN-SUFFIX,oaistatic.com,AI",

@@ -103,6 +103,7 @@ class ProfileRoleTests(unittest.TestCase):
 
     def test_primary_contains_required_service_routes(self):
         for rule in (
+            "DOMAIN,apple-relay.fastly-edge.com,DIRECT",
             "DOMAIN-SUFFIX,apple.com,DIRECT",
             "DOMAIN-SUFFIX,icloud.com,DIRECT",
             "DOMAIN-SUFFIX,icloud-content.com,DIRECT",
