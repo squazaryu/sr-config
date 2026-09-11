@@ -105,6 +105,8 @@ class ProfileRoleTests(unittest.TestCase):
                 line = "# Shadowrocket: 2026-09-08 19:25:40"
             elif line.startswith("update-url ="):
                 line = IOS_UPDATE
+            elif line.startswith("tun-excluded-routes ="):
+                line += ",ff02::fb/128"
             elif line.startswith("AI ="):
                 line = AI
             elif line.startswith("FINLAND ="):
