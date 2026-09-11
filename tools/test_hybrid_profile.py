@@ -54,8 +54,8 @@ class HybridProfileTests(unittest.TestCase):
         hybrid_groups = section(self.hybrid, "[Proxy Group]")
         primary_groups = section(self.primary, "[Proxy Group]")
         self.assertEqual(
-            [line for line in hybrid_groups if not line.startswith("AI =")],
-            [line for line in primary_groups if not line.startswith("AI =")],
+            [line for line in hybrid_groups if not line.startswith(("AI =", "TELEGRAM ="))],
+            [line for line in primary_groups if not line.startswith(("AI =", "TELEGRAM ="))],
         )
         self.assertEqual(
             next(line for line in hybrid_groups if line.startswith("AI =")),
@@ -64,6 +64,14 @@ class HybridProfileTests(unittest.TestCase):
             "FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,"
             "interval=600,tolerance=100,timeout=5,"
             "url=http://www.gstatic.com/generate_204",
+        )
+        self.assertIn(
+            "TELEGRAM = select,AUTO,PROXY,SERVERS,FINLAND,policy-select-name=AUTO",
+            hybrid_groups,
+        )
+        self.assertIn(
+            "TELEGRAM = select,AUTO,PROXY,SERVERS,FINLAND,policy-select-name=PROXY",
+            primary_groups,
         )
 
     def test_hybrid_is_not_an_auto_updating_primary_profile(self):
