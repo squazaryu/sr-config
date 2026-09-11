@@ -84,6 +84,13 @@ class SimplifiedIOSRoutingTests(unittest.TestCase):
             line for line in general if line.startswith("tun-excluded-routes =")
         ).split("=", 1)[1].split(","))
 
+    def test_apple_direct_does_not_bypass_the_tun_with_a_broad_ip_route(self):
+        general = section(self.lines, "[General]")
+        routes = next(line for line in general if line.startswith("tun-excluded-routes ="))
+        self.assertNotIn("17.0.0.0/8", routes.split("=", 1)[1].split(","))
+        self.assertIn("DOMAIN-SUFFIX,apple.com,DIRECT", self.rules)
+        self.assertIn("DOMAIN,gdmf.apple.com,DIRECT", self.rules)
+
     def test_removes_geoip_and_third_party_broad_proxy_rule_sets(self):
         self.assertNotIn("GEOIP,RU,DIRECT", self.rules)
         sources = [
