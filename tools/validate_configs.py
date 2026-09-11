@@ -321,6 +321,9 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     update_lines = [line for line in general if line.startswith("update-url")]
     if update_lines != [ios_update]:
         fail(errors, "ios: должен быть ровно один update-url на основной iOS-профиль")
+    tun_routes = next((line for line in general if line.startswith("tun-excluded-routes =")), "")
+    if "ff02::fb/128" not in tun_routes.split("=", 1)[-1].split(","):
+        fail(errors, "ios: IPv6 mDNS ff02::fb/128 должен быть исключён из TUN")
     groups = dict(line.split("=", 1) for line in meaningful(section_lines(ios_lines, "[Proxy Group]")) if "=" in line)
     groups = {name.strip(): value.strip() for name, value in groups.items()}
     for required in (
