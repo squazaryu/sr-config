@@ -45,7 +45,7 @@ class WatchAppleBypassProfileTests(unittest.TestCase):
         for value in ("::1/128", "fe80::/10", "ff02::fb/128"):
             self.assertIn(value, values)
 
-    def test_groups_and_rules_match_primary_except_final_telegram_default(self):
+    def test_groups_and_rules_match_primary(self):
         profile_groups = section(self.profile, "[Proxy Group]")
         primary_groups = section(self.primary, "[Proxy Group]")
         self.assertEqual(
@@ -57,7 +57,7 @@ class WatchAppleBypassProfileTests(unittest.TestCase):
             profile_groups,
         )
         self.assertIn(
-            "TELEGRAM = select,AUTO,PROXY,SERVERS,FINLAND,policy-select-name=PROXY",
+            "TELEGRAM = select,AUTO,PROXY,SERVERS,FINLAND,policy-select-name=AUTO",
             primary_groups,
         )
         self.assertEqual(section(self.profile, "[Rule]"),
