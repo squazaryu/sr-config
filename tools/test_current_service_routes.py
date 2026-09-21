@@ -105,6 +105,7 @@ class CurrentServiceRouteTests(unittest.TestCase):
             "DOMAIN-SUFFIX,mail.me.com,DIRECT",
             "DOMAIN-SUFFIX,mail.ru,DIRECT",
             "DOMAIN-SUFFIX,yandex.com,DIRECT",
+            "DOMAIN-SUFFIX,mgimo.ru,DIRECT",
         )
         expected_proxy = (
             "DOMAIN-SUFFIX,gmail.com,PROXY",

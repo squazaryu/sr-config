@@ -70,14 +70,15 @@ MAIL_RULES = (
     "DOMAIN-SUFFIX,mail.me.com,DIRECT",
     "DOMAIN-SUFFIX,mail.ru,DIRECT",
     "DOMAIN-SUFFIX,yandex.com,DIRECT",
+    "DOMAIN-SUFFIX,mgimo.ru,DIRECT",
     "DOMAIN-SUFFIX,gmail.com,PROXY",
     "DOMAIN-SUFFIX,googlemail.com,PROXY",
     "DOMAIN,accounts.google.com,PROXY",
 )
 MAIL_BLOCK = (
     "",
-    "# Почта: явные маршруты для IMAP и SMTP. Доменные правила покрывают",
-    "# стандартные порты 993, 465 и 587 без широких DST-PORT-переопределений.",
+    "# Почта: явные маршруты для IMAP, SMTP и Exchange. Доменные правила",
+    "# покрывают все порты без широких DST-PORT-переопределений.",
     *MAIL_RULES,
 )
 
