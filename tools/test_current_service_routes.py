@@ -125,7 +125,7 @@ class CurrentServiceRouteTests(unittest.TestCase):
     def test_instagram_isolated_group_routes_all_meta_rules_through_proxy(self):
         self.assertEqual(
             self.groups.get("INSTAGRAM"),
-            "select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=AUTO",
+            "select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=PROXY",
         )
         meta_rules = [
             rule for rule in self.rules
@@ -166,7 +166,7 @@ class CurrentServiceRouteTests(unittest.TestCase):
     def test_instagram_has_a_separate_proxy_group(self):
         self.assertEqual(
             self.groups.get("INSTAGRAM"),
-            "select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=AUTO",
+            "select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=PROXY",
         )
         meta_prefixes = (
             "DOMAIN-SUFFIX,instagram.com",

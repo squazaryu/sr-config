@@ -9,8 +9,10 @@ ARCHIVE = ROOT / "archive/2026-09-08"
 AI = "AI = url-test,FINLAND,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
 FINLAND = "FINLAND = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,🇫🇮 ФИНЛЯНДИЯ | РЕКЛАМА НА ЮТУБЕ,policy-select-name=FINLAND 🇫🇮,interval=300,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
 IOS_UPDATE = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios.conf"
-INSTAGRAM = "INSTAGRAM = select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=AUTO"
-TELEGRAM = "TELEGRAM = select,AUTO,PROXY,SERVERS,FINLAND,policy-select-name=PROXY"
+YOUTUBE = "YOUTUBE = select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=PROXY"
+INSTAGRAM = "INSTAGRAM = select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=PROXY"
+TELEGRAM = "TELEGRAM = select,AUTO,PROXY,SERVERS,FINLAND,policy-select-name=AUTO"
+AUTO = "AUTO = url-test,⚡️ULTRA,AUTO 2 → [🚀 ОПТИМАЛЬНАЯ],AUTO 4 → [🚀 ОПТИМАЛЬНАЯ],AUTO 5 → [🚀 ОПТИМАЛЬНАЯ],AUTO 3 → [🚀 ОПТИМАЛЬНАЯ],AUTO → [🚀 ОПТИМАЛЬНАЯ ЛОКАЦИЯ],interval=300,tolerance=50,timeout=5,url=http://www.gstatic.com/generate_204"
 ADDED_AI_RULES = (
     "DOMAIN-SUFFIX,featuregates.org,AI",
     "DOMAIN-SUFFIX,segment.io,AI",
@@ -104,7 +106,7 @@ class ProfileRoleTests(unittest.TestCase):
         expected = []
         for line in self.reference.splitlines():
             if line.startswith("# Shadowrocket:"):
-                line = "# Shadowrocket: 2026-09-11 22:50:53"
+                line = "# Shadowrocket: 2026-09-21 12:49:46"
             elif line.startswith("update-url ="):
                 line = IOS_UPDATE
             elif line.startswith("tun-excluded-routes ="):
@@ -116,8 +118,10 @@ class ProfileRoleTests(unittest.TestCase):
             elif line.startswith("TELEGRAM ="):
                 line = TELEGRAM
             elif line.startswith("YOUTUBE ="):
-                expected.extend((line, INSTAGRAM))
+                expected.extend((YOUTUBE, INSTAGRAM))
                 continue
+            elif line.startswith("AUTO ="):
+                line = AUTO
             elif line == "DOMAIN-SUFFIX,platipomiru.com,PROXY":
                 line = "DOMAIN-SUFFIX,platipomiru.com,TELEGRAM"
             elif line in LEGACY_FEATHER_RULES:
@@ -186,6 +190,7 @@ class ProfileRoleTests(unittest.TestCase):
         self.assertEqual(len(groups["AI"]), 1)
         self.assertEqual(len(groups["FINLAND"]), 5)
         self.assertEqual(groups["INSTAGRAM"], ["SERVERS", "PROXY", "AUTO", "FINLAND", "DIRECT"])
+        self.assertEqual(groups["AUTO"], ["⚡️ULTRA", "AUTO 2 → [🚀 ОПТИМАЛЬНАЯ]", "AUTO 4 → [🚀 ОПТИМАЛЬНАЯ]", "AUTO 5 → [🚀 ОПТИМАЛЬНАЯ]", "AUTO 3 → [🚀 ОПТИМАЛЬНАЯ]", "AUTO → [🚀 ОПТИМАЛЬНАЯ ЛОКАЦИЯ]"])
         for rule in FEATHER_RULES:
             self.assertIn(rule, self.rules)
         def walk(name, stack):
