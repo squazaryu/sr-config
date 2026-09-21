@@ -70,7 +70,7 @@ class HybridProfileTests(unittest.TestCase):
             hybrid_groups,
         )
         self.assertIn(
-            "TELEGRAM = select,AUTO,PROXY,SERVERS,FINLAND,policy-select-name=PROXY",
+            "TELEGRAM = select,AUTO,PROXY,SERVERS,FINLAND,policy-select-name=AUTO",
             primary_groups,
         )
 

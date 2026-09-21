@@ -204,9 +204,13 @@ class ProfileRoleTests(unittest.TestCase):
     def test_validator_accepts_current_profile(self):
         self.assertEqual(self.errors_for(self.text), [])
 
-    def test_validator_rejects_changed_ai_and_finland_pools(self):
+    def test_validator_rejects_changed_protected_groups(self):
         for old, new in ((AI, "AI = select,PROXY"),
                          (FINLAND, "FINLAND = select,🇫🇮 ALL VPN | ФИНЛЯНДИЯ"),
+                         (TELEGRAM, "TELEGRAM = select,PROXY"),
+                         (YOUTUBE, "YOUTUBE = select,AUTO"),
+                         (INSTAGRAM, "INSTAGRAM = select,AUTO"),
+                         (AUTO, "AUTO = select,PROXY"),
                          ("AI = url-test,", "AI = url-test,SHD,")):
             self.assertTrue(self.errors_for(self.text.replace(old, new, 1)))
 

@@ -329,8 +329,11 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
     for required in (
         "AI = url-test,FINLAND,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
         "FINLAND = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,🇫🇮 ФИНЛЯНДИЯ | РЕКЛАМА НА ЮТУБЕ,policy-select-name=FINLAND 🇫🇮,interval=300,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
-        "TELEGRAM = select,AUTO,PROXY,SERVERS,FINLAND,policy-select-name=PROXY",
-        "INSTAGRAM = select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=AUTO",
+        "WEATHER = url-test,AUTO,PROXY,policy-select-name=AUTO,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204",
+        "TELEGRAM = select,AUTO,PROXY,SERVERS,FINLAND,policy-select-name=AUTO",
+        "YOUTUBE = select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=PROXY",
+        "INSTAGRAM = select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=PROXY",
+        "AUTO = url-test,⚡️ULTRA,AUTO 2 → [🚀 ОПТИМАЛЬНАЯ],AUTO 4 → [🚀 ОПТИМАЛЬНАЯ],AUTO 5 → [🚀 ОПТИМАЛЬНАЯ],AUTO 3 → [🚀 ОПТИМАЛЬНАЯ],AUTO → [🚀 ОПТИМАЛЬНАЯ ЛОКАЦИЯ],interval=300,tolerance=50,timeout=5,url=http://www.gstatic.com/generate_204",
     ):
         name, value = (part.strip() for part in required.split("=", 1))
         if groups.get(name) != value:
