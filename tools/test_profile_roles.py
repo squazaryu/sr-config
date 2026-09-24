@@ -73,8 +73,8 @@ MAIL_RULES = (
     "DOMAIN-SUFFIX,mail.ru,DIRECT",
     "DOMAIN-SUFFIX,yandex.com,DIRECT",
     "DOMAIN-SUFFIX,mgimo.ru,DIRECT",
-    "DOMAIN-SUFFIX,gmail.com,PROXY",
-    "DOMAIN-SUFFIX,googlemail.com,PROXY",
+    "DOMAIN-SUFFIX,gmail.com,DIRECT",
+    "DOMAIN-SUFFIX,googlemail.com,DIRECT",
     "DOMAIN,accounts.google.com,PROXY",
 )
 MAIL_BLOCK = (
