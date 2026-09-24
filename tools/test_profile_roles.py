@@ -77,6 +77,7 @@ MAIL_RULES = (
     "DOMAIN-SUFFIX,googlemail.com,DIRECT",
     "DOMAIN,accounts.google.com,PROXY",
 )
+HLTV_RULE = "DOMAIN-SUFFIX,hltv.org,DIRECT"
 MAIL_BLOCK = (
     "",
     "# Почта: явные маршруты для IMAP, SMTP и Exchange. Доменные правила",
@@ -132,6 +133,7 @@ class ProfileRoleTests(unittest.TestCase):
                 line = ",".join(fields)
             expected.append(line)
             if line == "DOMAIN-SUFFIX,aviasales.com,DIRECT":
+                expected.append(HLTV_RULE)
                 expected.extend(MAIL_BLOCK)
             if line == "DOMAIN-SUFFIX,ct.sendgrid.net,AI":
                 expected.extend(ADDED_AI_RULES)
@@ -153,6 +155,7 @@ class ProfileRoleTests(unittest.TestCase):
                 rule = ",".join(fields)
             updated.append(rule)
             if rule == "DOMAIN-SUFFIX,aviasales.com,DIRECT":
+                updated.append(HLTV_RULE)
                 updated.extend(MAIL_RULES)
             if rule == "DOMAIN-SUFFIX,ct.sendgrid.net,AI":
                 updated.extend(ADDED_AI_RULES)

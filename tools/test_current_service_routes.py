@@ -122,6 +122,13 @@ class CurrentServiceRouteTests(unittest.TestCase):
             with self.subTest(position=rule):
                 self.assertIn(rule, self.rules[:boundary])
 
+    def test_hltv_hosts_have_an_early_direct_route(self):
+        rule = "DOMAIN-SUFFIX,hltv.org,DIRECT"
+        self.assertIn(rule, self.rules)
+        boundary = next(i for i, candidate in enumerate(self.rules)
+                        if candidate.startswith(("RULE-SET,", "GEOIP,")))
+        self.assertIn(rule, self.rules[:boundary])
+
     def test_instagram_isolated_group_routes_all_meta_rules_through_proxy(self):
         self.assertEqual(
             self.groups.get("INSTAGRAM"),
