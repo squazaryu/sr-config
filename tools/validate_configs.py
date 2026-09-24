@@ -354,6 +354,7 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
         "DOMAIN-SUFFIX,gmail.com,DIRECT",
         "DOMAIN-SUFFIX,googlemail.com,DIRECT",
         "DOMAIN,accounts.google.com,PROXY",
+        "DOMAIN-SUFFIX,hltv.org,DIRECT",
         "DOMAIN-SUFFIX,getutm.app,PROXY",
         "DOMAIN-SUFFIX,fastsign.dev,PROXY",
         "DOMAIN-SUFFIX,apptesters.org,PROXY",
