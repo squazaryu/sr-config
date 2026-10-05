@@ -78,6 +78,10 @@ MAIL_RULES = (
     "DOMAIN,accounts.google.com,PROXY",
 )
 HLTV_RULE = "DOMAIN-SUFFIX,hltv.org,DIRECT"
+PLATIPOMIRU_RULES = (
+    "DOMAIN-SUFFIX,tg-api.platipovsemumi.ru,TELEGRAM",
+    "DOMAIN-SUFFIX,tg.platipovsemumi.ru,TELEGRAM",
+)
 MAIL_BLOCK = (
     "",
     "# Почта: явные маршруты для IMAP, SMTP и Exchange. Доменные правила",
@@ -107,7 +111,7 @@ class ProfileRoleTests(unittest.TestCase):
         expected = []
         for line in self.reference.splitlines():
             if line.startswith("# Shadowrocket:"):
-                line = "# Shadowrocket: 2026-09-21 12:49:46"
+                line = "# Shadowrocket: 2026-10-05 22:34:59"
             elif line.startswith("update-url ="):
                 line = IOS_UPDATE
             elif line.startswith("tun-excluded-routes ="):
@@ -131,6 +135,8 @@ class ProfileRoleTests(unittest.TestCase):
                 fields = line.split(",")
                 fields[2] = "INSTAGRAM"
                 line = ",".join(fields)
+            if line == "# BEGIN APPLE AND RU DIRECT":
+                expected.extend(PLATIPOMIRU_RULES)
             expected.append(line)
             if line == "DOMAIN-SUFFIX,aviasales.com,DIRECT":
                 expected.append(HLTV_RULE)
@@ -143,7 +149,7 @@ class ProfileRoleTests(unittest.TestCase):
 
     def test_all_rules_keep_order_and_options(self):
         original = validation.meaningful(validation.section_lines(self.reference.splitlines(), "[Rule]"))
-        updated = []
+        updated = list(PLATIPOMIRU_RULES)
         for rule in original:
             if rule == "DOMAIN-SUFFIX,platipomiru.com,PROXY":
                 rule = "DOMAIN-SUFFIX,platipomiru.com,TELEGRAM"
