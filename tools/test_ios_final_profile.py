@@ -8,7 +8,7 @@ import validate_configs as validation
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE = ROOT / "url-set-ios.conf"
-HEADER = "# Shadowrocket: 2026-09-21 12:49:46"
+HEADER = "# Shadowrocket: 2026-10-05 22:34:59"
 WEATHER = "url-test,AUTO,PROXY,policy-select-name=AUTO,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
 TELEGRAM = "select,AUTO,PROXY,SERVERS,FINLAND,policy-select-name=AUTO"
 YOUTUBE = "select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=PROXY"

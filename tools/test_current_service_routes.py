@@ -129,6 +129,17 @@ class CurrentServiceRouteTests(unittest.TestCase):
                         if candidate.startswith(("RULE-SET,", "GEOIP,")))
         self.assertIn(rule, self.rules[:boundary])
 
+    def test_new_platipomiru_hosts_have_early_telegram_routes(self):
+        expected = (
+            "DOMAIN-SUFFIX,tg-api.platipovsemumi.ru,TELEGRAM",
+            "DOMAIN-SUFFIX,tg.platipovsemumi.ru,TELEGRAM",
+        )
+        boundary = next(i for i, candidate in enumerate(self.rules)
+                        if candidate.startswith(("RULE-SET,", "GEOIP,")))
+        for rule in expected:
+            with self.subTest(rule=rule):
+                self.assertIn(rule, self.rules[:boundary])
+
     def test_instagram_isolated_group_routes_all_meta_rules_through_proxy(self):
         self.assertEqual(
             self.groups.get("INSTAGRAM"),
