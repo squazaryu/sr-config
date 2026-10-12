@@ -75,7 +75,14 @@ MAIL_RULES = (
     "DOMAIN-SUFFIX,mgimo.ru,DIRECT",
     "DOMAIN-SUFFIX,gmail.com,DIRECT",
     "DOMAIN-SUFFIX,googlemail.com,DIRECT",
-    "DOMAIN,accounts.google.com,PROXY",
+)
+GOOGLE_AI_BLOCK = (
+    "# BEGIN GOOGLE AI ROUTING",
+    "# Google AI Studio / Gemini и вход Google: через финскую AI-группу.",
+    "# Региональный accounts.google.ru должен идти раньше общего ru,DIRECT.",
+    *(f"{rule_type},{host},AI" for rule_type, host in validation.GOOGLE_AI_DOMAINS),
+    "# END GOOGLE AI ROUTING",
+    "",
 )
 HLTV_RULE = "DOMAIN-SUFFIX,hltv.org,DIRECT"
 PLATIPOMIRU_RULES = (
@@ -136,6 +143,7 @@ class ProfileRoleTests(unittest.TestCase):
                 fields[2] = "INSTAGRAM"
                 line = ",".join(fields)
             if line == "# BEGIN APPLE AND RU DIRECT":
+                expected.extend(GOOGLE_AI_BLOCK)
                 expected.extend(PLATIPOMIRU_RULES)
             expected.append(line)
             if line == "DOMAIN-SUFFIX,aviasales.com,DIRECT":
@@ -149,7 +157,8 @@ class ProfileRoleTests(unittest.TestCase):
 
     def test_all_rules_keep_order_and_options(self):
         original = validation.meaningful(validation.section_lines(self.reference.splitlines(), "[Rule]"))
-        updated = list(PLATIPOMIRU_RULES)
+        updated = [f"{rule_type},{host},AI" for rule_type, host in validation.GOOGLE_AI_DOMAINS]
+        updated.extend(PLATIPOMIRU_RULES)
         for rule in original:
             if rule == "DOMAIN-SUFFIX,platipomiru.com,PROXY":
                 rule = "DOMAIN-SUFFIX,platipomiru.com,TELEGRAM"
@@ -171,13 +180,17 @@ class ProfileRoleTests(unittest.TestCase):
         self.assertEqual(self.rules, original)
         self.assertEqual(sum(rule.startswith("RULE-SET,") for rule in self.rules), 18)
 
-    def test_fallback_and_macos_are_unchanged(self):
+    def test_fallback_and_macos_outside_google_ai_are_unchanged(self):
         hashes = {
             "url-set-main.conf": "541a7e558d60dca72ec128eedb2739f05d38e85bc8fe2bb0ddebc0b373e15da8",
             "url-set-macos.conf": "d19551c09ef344455566d324fd8479cce60afeb28506dfb10a9e23560a95d2b7",
         }
         for name, digest in hashes.items():
-            self.assertEqual(hashlib.sha256((ROOT / name).read_bytes()).hexdigest(), digest)
+            payload = (ROOT / name).read_bytes()
+            if name == "url-set-macos.conf":
+                block = "\n".join(GOOGLE_AI_BLOCK).replace(",AI\n", ",🤖 AI-сервисы\n") + "\n"
+                payload = payload.replace(block.encode("utf-8"), b"", 1)
+            self.assertEqual(hashlib.sha256(payload).hexdigest(), digest)
 
     def test_only_active_profiles_remain_at_root(self):
         self.assertEqual({p.name for p in ROOT.glob("*.conf")},

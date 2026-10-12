@@ -102,6 +102,23 @@ IOS_FEATHER_FINLAND_RULES = tuple(
     )
 )
 MAIN_PLATIPOMIRU_RULE = "DOMAIN-SUFFIX,platipomiru.com,🇫🇮 Финляндия"
+GOOGLE_AI_DOMAINS = (
+    ("DOMAIN-SUFFIX", "aistudio.google.com"),
+    ("DOMAIN", "gemini.google.com"),
+    ("DOMAIN-SUFFIX", "gemini.google"),
+    ("DOMAIN", "generativelanguage.googleapis.com"),
+    ("DOMAIN", "accounts.google.com"),
+    ("DOMAIN", "accounts.google.ru"),
+    ("DOMAIN", "oauth2.googleapis.com"),
+    ("DOMAIN", "openidconnect.googleapis.com"),
+    ("DOMAIN", "apis.google.com"),
+    ("DOMAIN", "content.googleapis.com"),
+    ("DOMAIN", "alkalimakersuite-pa.clients6.google.com"),
+    ("DOMAIN", "webchannel-alkalimakersuite-pa.clients6.google.com"),
+    ("DOMAIN", "alkalimakersuiteapplets.pa.clients6.google.com"),
+    ("DOMAIN", "cloudconsole-pa.clients6.google.com"),
+    ("DOMAIN", "people-pa.clients6.google.com"),
+)
 
 
 def fail(errors: list[str], message: str) -> None:
@@ -353,7 +370,7 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
         "DOMAIN-SUFFIX,mgimo.ru,DIRECT",
         "DOMAIN-SUFFIX,gmail.com,DIRECT",
         "DOMAIN-SUFFIX,googlemail.com,DIRECT",
-        "DOMAIN,accounts.google.com,PROXY",
+        "DOMAIN,accounts.google.com,AI",
         "DOMAIN-SUFFIX,tg-api.platipovsemumi.ru,TELEGRAM",
         "DOMAIN-SUFFIX,tg.platipovsemumi.ru,TELEGRAM",
         "DOMAIN-SUFFIX,hltv.org,DIRECT",
@@ -407,6 +424,29 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
             fail(errors, f"main: failsafe не содержит обязательное service rule: {main_rule}")
 
 
+def validate_google_ai_routes(lines_by_name: dict[str, list[str]], errors: list[str]) -> None:
+    for name, policy in (("ios", "AI"), ("macos", "🤖 AI-сервисы")):
+        lines = lines_by_name[name]
+        rules = meaningful(section_lines(lines, "[Rule]"))
+        boundary = next((i for i, rule in enumerate(rules)
+                         if rule.startswith(("RULE-SET,", "GEOIP,"))
+                         or rule == "DOMAIN-SUFFIX,ru,DIRECT"), len(rules))
+        for rule_type, host in GOOGLE_AI_DOMAINS:
+            prefix = f"{rule_type},{host},"
+            required = prefix + policy
+            matches = [rule for rule in rules if rule.startswith(prefix)]
+            if matches != [required] or required not in rules[:boundary]:
+                fail(errors, f"{name}: отсутствует или перекрыто раннее Google AI rule: {required}")
+        groups = dict(line.split("=", 1) for line in meaningful(section_lines(lines, "[Proxy Group]"))
+                      if "=" in line)
+        groups = {key.strip(): value.strip() for key, value in groups.items()}
+        expected_pool = "FINLAND" if name == "ios" else "🇫🇮 Финляндия (авто)"
+        members = [part.strip() for part in groups.get(policy, "").split(",")[1:]
+                   if "=" not in part]
+        if members != [expected_pool] or expected_pool not in groups:
+            fail(errors, f"{name}: Google AI policy должна использовать только {expected_pool}")
+
+
 def main() -> int:
     errors: list[str] = []
     lines_by_name = {name: read_config(path, errors) for name, path in CONFIGS.items()}
@@ -423,6 +463,7 @@ def main() -> int:
         validate_failsafe(lines_by_name["main"], rules_by_name["main"], errors)
     validate_special_cases(lines_by_name, errors)
     validate_ios_service_routes(lines_by_name, errors)
+    validate_google_ai_routes(lines_by_name, errors)
 
     if errors:
         for error in errors:
