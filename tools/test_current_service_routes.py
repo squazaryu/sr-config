@@ -109,16 +109,17 @@ class CurrentServiceRouteTests(unittest.TestCase):
             "DOMAIN-SUFFIX,gmail.com,DIRECT",
             "DOMAIN-SUFFIX,googlemail.com,DIRECT",
         )
-        expected_proxy = (
-            "DOMAIN,accounts.google.com,PROXY",
+        expected_ai = (
+            "DOMAIN,accounts.google.com,AI",
+            "DOMAIN,accounts.google.ru,AI",
         )
-        for rule in expected_direct + expected_proxy:
+        for rule in expected_direct + expected_ai:
             with self.subTest(rule=rule):
                 self.assertIn(rule, self.rules)
 
         boundary = next(i for i, rule in enumerate(self.rules)
                         if rule.startswith(("RULE-SET,", "GEOIP,")))
-        for rule in expected_direct + expected_proxy:
+        for rule in expected_direct + expected_ai:
             with self.subTest(position=rule):
                 self.assertIn(rule, self.rules[:boundary])
 
