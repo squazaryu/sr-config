@@ -95,6 +95,11 @@ MAIL_BLOCK = (
     "# покрывают все порты без широких DST-PORT-переопределений.",
     *MAIL_RULES,
 )
+MACOS_MAIL_RULES = (
+    "DOMAIN-SUFFIX,gmail.com,DIRECT",
+    "DOMAIN-SUFFIX,googlemail.com,DIRECT",
+    "DOMAIN-SUFFIX,mail.me.com,DIRECT",
+)
 
 
 class ProfileRoleTests(unittest.TestCase):
@@ -190,6 +195,8 @@ class ProfileRoleTests(unittest.TestCase):
             if name == "url-set-macos.conf":
                 block = "\n".join(GOOGLE_AI_BLOCK).replace(",AI\n", ",🤖 AI-сервисы\n") + "\n"
                 payload = payload.replace(block.encode("utf-8"), b"", 1)
+                for rule in MACOS_MAIL_RULES:
+                    payload = payload.replace((rule + "\n").encode("utf-8"), b"", 1)
             self.assertEqual(hashlib.sha256(payload).hexdigest(), digest)
 
     def test_only_active_profiles_remain_at_root(self):
