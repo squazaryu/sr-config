@@ -72,6 +72,12 @@ ALL VPN Швеция. Новые правила устраняют это раз
 возраст и подтверждение возраста:
 [официальные условия доступа](https://ai.google.dev/gemini-api/docs/available-regions).
 
+## Почта на macOS (2026-10-13)
+
+`gmail.com`, `googlemail.com` и `mail.me.com` направляются через DIRECT для
+IMAP/SMTP. Google web/OAuth остаётся в финской AI-группе; этот маршрут не
+меняет почтовые соединения на iOS.
+
 ## Архив
 
 [Тестовые и промежуточные профили](archive/2026-09-08/README.md) перенесены
