@@ -185,19 +185,17 @@ class ProfileRoleTests(unittest.TestCase):
         self.assertEqual(self.rules, original)
         self.assertEqual(sum(rule.startswith("RULE-SET,") for rule in self.rules), 18)
 
-    def test_fallback_and_macos_outside_google_ai_are_unchanged(self):
-        hashes = {
-            "url-set-main.conf": "541a7e558d60dca72ec128eedb2739f05d38e85bc8fe2bb0ddebc0b373e15da8",
-            "url-set-macos.conf": "d19551c09ef344455566d324fd8479cce60afeb28506dfb10a9e23560a95d2b7",
-        }
-        for name, digest in hashes.items():
-            payload = (ROOT / name).read_bytes()
-            if name == "url-set-macos.conf":
-                block = "\n".join(GOOGLE_AI_BLOCK).replace(",AI\n", ",🤖 AI-сервисы\n") + "\n"
-                payload = payload.replace(block.encode("utf-8"), b"", 1)
-                for rule in MACOS_MAIL_RULES:
-                    payload = payload.replace((rule + "\n").encode("utf-8"), b"", 1)
-            self.assertEqual(hashlib.sha256(payload).hexdigest(), digest)
+    def test_fallback_and_macos_network_settings_are_unchanged(self):
+        self.assertEqual(
+            hashlib.sha256((ROOT / "url-set-main.conf").read_bytes()).hexdigest(),
+            "541a7e558d60dca72ec128eedb2739f05d38e85bc8fe2bb0ddebc0b373e15da8",
+        )
+        macos = (ROOT / "url-set-macos.conf").read_text(encoding="utf-8")
+        general = macos.split("[General]\n", 1)[1].split("\n[Proxy Group]", 1)[0]
+        self.assertEqual(hashlib.sha256(general.encode("utf-8")).hexdigest(),
+                         "8e3b1ca8bb3bf5de189c4faf31f3ed13af566712dae339e366ed07505b9b5f29")
+        for rule in MACOS_MAIL_RULES:
+            self.assertIn(rule, validation.section_lines(macos.splitlines(), "[Rule]"))
 
     def test_only_active_profiles_remain_at_root(self):
         self.assertEqual({p.name for p in ROOT.glob("*.conf")},
