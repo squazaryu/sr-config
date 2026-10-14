@@ -314,11 +314,33 @@ def validate_failsafe(lines: list[str], rules: list[tuple[str, list[str], str]],
 
 
 def validate_special_cases(lines_by_name: dict[str, list[str]], errors: list[str]) -> None:
-    macos = "\n".join(lines_by_name["macos"])
-    if "🗺️ Выбор сервера = select,YOUR-DUREV.COM" not in macos:
-        fail(errors, "macos: узел YOUR-DUREV.COM должен оставаться в ручной группе")
-    if "🎧 Spotify = select, DIRECT" not in macos:
-        fail(errors, "macos: Spotify должен оставаться DIRECT")
+    groups = {}
+    for platform in ("ios", "macos"):
+        groups[platform] = {
+            name.strip(): value.strip()
+            for line in meaningful(section_lines(lines_by_name[platform], "[Proxy Group]")) if "=" in line
+            for name, value in [line.split("=", 1)]
+        }
+    expected = dict(groups["ios"], SPOTIFY="select,DIRECT,policy-select-name=DIRECT")
+    if list(groups["macos"]) != list(expected):
+        fail(errors, "macos: набор и порядок Proxy Group должны совпадать с iOS")
+    for name, value in expected.items():
+        if groups["macos"].get(name) != value:
+            fail(errors, f"macos: группа {name} должна совпадать с iOS; исключение — SPOTIFY DIRECT")
+
+    macos_rules = meaningful(section_lines(lines_by_name["macos"], "[Rule]"))
+    boundary = next((i for i, rule in enumerate(macos_rules)
+                     if rule.startswith("RULE-SET,") and rule.split(",")[2:3] == ["DEFAULT"]), len(macos_rules))
+    for rule in meaningful(section_lines(lines_by_name["ios"], "[Rule]")):
+        fields = rule.split(",")
+        if len(fields) > 2 and fields[2] in {"YOUTUBE", "INSTAGRAM", "TELEGRAM", "SPOTIFY"}:
+            if macos_rules.count(rule) != 1 or rule not in macos_rules[:boundary]:
+                fail(errors, f"macos: отсутствует или перекрыт маршрут группы сервиса: {rule}")
+    first_remote = next((i for i, rule in enumerate(macos_rules) if rule.startswith("RULE-SET,")), len(macos_rules))
+    for host in ("gmail.com", "googlemail.com", "mail.me.com"):
+        rule = f"DOMAIN-SUFFIX,{host},DIRECT"
+        if macos_rules.count(rule) != 1 or rule not in macos_rules[:first_remote]:
+            fail(errors, f"macos: отсутствует или перекрыто почтовое DIRECT-правило: {rule}")
 
     for name, lines in lines_by_name.items():
         for line_number, line in enumerate(lines, start=1):
@@ -425,7 +447,7 @@ def validate_ios_service_routes(lines_by_name: dict[str, list[str]], errors: lis
 
 
 def validate_google_ai_routes(lines_by_name: dict[str, list[str]], errors: list[str]) -> None:
-    for name, policy in (("ios", "AI"), ("macos", "🤖 AI-сервисы")):
+    for name, policy in (("ios", "AI"), ("macos", "AI")):
         lines = lines_by_name[name]
         rules = meaningful(section_lines(lines, "[Rule]"))
         boundary = next((i for i, rule in enumerate(rules)
@@ -440,7 +462,7 @@ def validate_google_ai_routes(lines_by_name: dict[str, list[str]], errors: list[
         groups = dict(line.split("=", 1) for line in meaningful(section_lines(lines, "[Proxy Group]"))
                       if "=" in line)
         groups = {key.strip(): value.strip() for key, value in groups.items()}
-        expected_pool = "FINLAND" if name == "ios" else "🇫🇮 Финляндия (авто)"
+        expected_pool = "FINLAND"
         members = [part.strip() for part in groups.get(policy, "").split(",")[1:]
                    if "=" not in part]
         if members != [expected_pool] or expected_pool not in groups:

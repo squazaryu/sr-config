@@ -7,7 +7,7 @@
 | Файл | Назначение |
 | --- | --- |
 | [url-set-ios.conf](https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios.conf) | Основной iOS: пользовательский экспорт 2026-09-08 19:25:40 с удалённой из AI неиспользуемой подпиской SHD |
-| [url-set-macos.conf](https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-macos.conf) | Независимый macOS-профиль |
+| [url-set-macos.conf](https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-macos.conf) | Группы как в iOS; Spotify через DIRECT, сетевые настройки macOS |
 | [url-set-main.conf](https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-main.conf) | Самодостаточный fallback: встроенные списки, без Proxy Group и внешних RULE-SET |
 
 В iOS сохранён присланный пользователем текст с согласованными правками:
@@ -23,7 +23,7 @@ FINLAND автоматически выбирает один из пяти фи�
 FINLAND теперь содержит пять узлов: два прежних и добавленные
 `FINLAND 42…-2`, `FINLAND 52…-2` и `🇫🇮 ФИНЛЯНДИЯ | РЕКЛАМА НА ЮТУБУ`.
 AI-группа использует только группу FINLAND; общий PROXY в AI не используется.
-Spotify сохраняет шесть кандидатов из предоставленного экспорта, включая ALL VPN.
+Spotify на iOS сохраняет шесть кандидатов из предоставленного экспорта, включая ALL VPN.
 Имена внешних записей должны совпадать с именами на устройстве; страна выхода
 не подтверждается ни названием, ни успешной проверкой gstatic.
 
@@ -45,15 +45,15 @@ GEOIP и FINAL сохранены как в пользовательском э�
 
 Импортировать основной iOS по URL, активировать его, выбрать маршрутизацию
 «Конфигурация» и переподключить VPN. Проверить выбранные записи AI на устройстве.
-MacOS этим переносом не изменён; fallback пересобран из актуальных внешних
-снимков.
+В macOS используется та же схема групп с исключением Spotify DIRECT.
+Самодостаточный fallback сохраняет собственную схему маршрутизации.
 
 ## Google AI Studio и Google-вход (2026-10-12)
 
 Оба активных профиля содержат ранний встроенный блок Google AI: AI Studio,
 Gemini, Gemini API, Google-вход/OAuth и API-хосты, обнаруженные в публичной
-странице AI Studio. В iOS путь — `AI → FINLAND`, в macOS —
-`🤖 AI-сервисы → 🇫🇮 Финляндия (авто)`. Исключение `accounts.google.ru`
+странице AI Studio. В обоих профилях путь — `AI → FINLAND`.
+Исключение `accounts.google.ru`
 стоит перед общим `ru,DIRECT`; `accounts.google.com` больше не использует
 обычный выбранный PROXY на iOS.
 
@@ -77,6 +77,21 @@ ALL VPN Швеция. Новые правила устраняют это раз
 `gmail.com`, `googlemail.com` и `mail.me.com` направляются через DIRECT для
 IMAP/SMTP. Google web/OAuth остаётся в финской AI-группе; этот маршрут не
 меняет почтовые соединения на iOS.
+
+## Общие группы iOS/macOS (2026-10-14)
+
+На обеих платформах одинаковые группы, их порядок, кандидаты, вложенные
+зависимости и значения по умолчанию. Единственное исключение —
+`SPOTIFY = select,DIRECT,policy-select-name=DIRECT` на macOS.
+`FINLAND` содержит те же пять узлов, `SERVERS` и `AUTO` скопированы из iOS.
+YouTube, Instagram/Meta и Telegram Mini App используют соответствующие
+`YOUTUBE`, `INSTAGRAM` и `TELEGRAM`-маршруты из iOS. Транспортные UDP/QUIC-правила
+этим переносом не менялись.
+
+При обновлении macOS-профиля имена узлов (`DUREV`, `FINLAND 42/52 …-2`,
+`⚡️ULTRA` и AUTO-узлы) должны совпадать с записями в Shadowrocket на Mac.
+Валидатор сравнивает группы обоих профилей и учитывает только исключение
+SPOTIFY DIRECT. Сетевые настройки `[General]` macOS сохранены.
 
 ## Архив
 
