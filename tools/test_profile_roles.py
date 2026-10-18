@@ -6,13 +6,15 @@ import validate_configs as validation
 
 ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE = ROOT / "archive/2026-09-08"
-AI = "AI = url-test,FINLAND,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
+AI = "AI = url-test,GERMANY,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
 FINLAND = "FINLAND = url-test,FINLAND 🇫🇮,🇫🇮 ФИНЛЯНДИЯ,FINLAND 42 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,FINLAND 52 🇫🇮 → [📃 БЕЛЫЕ СПИСКИ]-2,🇫🇮 ФИНЛЯНДИЯ | РЕКЛАМА НА ЮТУБЕ,policy-select-name=FINLAND 🇫🇮,interval=300,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
 IOS_UPDATE = "update-url = https://raw.githubusercontent.com/squazaryu/sr-config/main/url-set-ios.conf"
+GERMANY = "GERMANY = url-test,GERMANY 🇩🇪,policy-select-name=GERMANY 🇩🇪,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
+USA = "USA = url-test,USA 🇺🇸,policy-select-name=USA 🇺🇸,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
 YOUTUBE = "YOUTUBE = select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=PROXY"
 INSTAGRAM = "INSTAGRAM = select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=PROXY"
 TELEGRAM = "TELEGRAM = select,AUTO,PROXY,SERVERS,FINLAND,policy-select-name=AUTO"
-AUTO = "AUTO = url-test,⚡️ULTRA,AUTO 2 → [🚀 ОПТИМАЛЬНАЯ],AUTO 4 → [🚀 ОПТИМАЛЬНАЯ],AUTO 5 → [🚀 ОПТИМАЛЬНАЯ],AUTO 3 → [🚀 ОПТИМАЛЬНАЯ],AUTO → [🚀 ОПТИМАЛЬНАЯ ЛОКАЦИЯ],interval=300,tolerance=50,timeout=5,url=http://www.gstatic.com/generate_204"
+AUTO = "AUTO = url-test,⚡️ULTRA,AUTO 2 → [🚀 ОПТИМАЛЬНАЯ],AUTO 4 → [🚀 ОПТИМАЛЬНАЯ],AUTO 5 → [🚀 ОПТИМАЛЬНАЯ],AUTO 3 → [🚀 ОПТИМАЛЬНАЯ],AUTO → [🚀 ОПТИМАЛЬНАЯ ЛОКАЦИЯ],AUTO → [🚀 ОПТИМАЛЬНАЯ],AUTO 6 → [🚀 ОПТИМАЛЬНАЯ],AUTO 7 → [🚀 ОПТИМАЛЬНАЯ],AUTO 8 → [🚀 ОПТИМАЛЬНАЯ],policy-select-name=⚡️ULTRA,interval=300,tolerance=50,timeout=5,url=http://www.gstatic.com/generate_204"
 ADDED_AI_RULES = (
     "DOMAIN-SUFFIX,featuregates.org,AI",
     "DOMAIN-SUFFIX,segment.io,AI",
@@ -78,7 +80,7 @@ MAIL_RULES = (
 )
 GOOGLE_AI_BLOCK = (
     "# BEGIN GOOGLE AI ROUTING",
-    "# Google AI Studio / Gemini и вход Google: через финскую AI-группу.",
+    "# Google AI Studio / Gemini и вход Google: через AI-группу (GERMANY).",
     "# Региональный accounts.google.ru должен идти раньше общего ru,DIRECT.",
     *(f"{rule_type},{host},AI" for rule_type, host in validation.GOOGLE_AI_DOMAINS),
     "# END GOOGLE AI ROUTING",
@@ -151,6 +153,8 @@ class ProfileRoleTests(unittest.TestCase):
                 expected.extend(GOOGLE_AI_BLOCK)
                 expected.extend(PLATIPOMIRU_RULES)
             expected.append(line)
+            if line == FINLAND:
+                expected.extend((GERMANY, USA))
             if line == "DOMAIN-SUFFIX,aviasales.com,DIRECT":
                 expected.append(HLTV_RULE)
                 expected.extend(MAIL_BLOCK)
@@ -212,12 +216,14 @@ class ProfileRoleTests(unittest.TestCase):
                 if setting.startswith("policy-select-name="):
                     self.assertIn(setting.split("=", 1)[1], members)
             groups[name.strip()] = members
-        self.assertEqual(len(groups), 11)
-        self.assertEqual(groups["AI"], ["FINLAND"])
+        self.assertEqual(len(groups), 13)
+        self.assertEqual(groups["AI"], ["GERMANY"])
         self.assertEqual(len(groups["AI"]), 1)
         self.assertEqual(len(groups["FINLAND"]), 5)
+        self.assertEqual(groups["GERMANY"], ["GERMANY 🇩🇪"])
+        self.assertEqual(groups["USA"], ["USA 🇺🇸"])
         self.assertEqual(groups["INSTAGRAM"], ["SERVERS", "PROXY", "AUTO", "FINLAND", "DIRECT"])
-        self.assertEqual(groups["AUTO"], ["⚡️ULTRA", "AUTO 2 → [🚀 ОПТИМАЛЬНАЯ]", "AUTO 4 → [🚀 ОПТИМАЛЬНАЯ]", "AUTO 5 → [🚀 ОПТИМАЛЬНАЯ]", "AUTO 3 → [🚀 ОПТИМАЛЬНАЯ]", "AUTO → [🚀 ОПТИМАЛЬНАЯ ЛОКАЦИЯ]"])
+        self.assertEqual(groups["AUTO"], ["⚡️ULTRA", "AUTO 2 → [🚀 ОПТИМАЛЬНАЯ]", "AUTO 4 → [🚀 ОПТИМАЛЬНАЯ]", "AUTO 5 → [🚀 ОПТИМАЛЬНАЯ]", "AUTO 3 → [🚀 ОПТИМАЛЬНАЯ]", "AUTO → [🚀 ОПТИМАЛЬНАЯ ЛОКАЦИЯ]", "AUTO → [🚀 ОПТИМАЛЬНАЯ]", "AUTO 6 → [🚀 ОПТИМАЛЬНАЯ]", "AUTO 7 → [🚀 ОПТИМАЛЬНАЯ]", "AUTO 8 → [🚀 ОПТИМАЛЬНАЯ]"])
         for rule in FEATHER_RULES:
             self.assertIn(rule, self.rules)
         def walk(name, stack):
