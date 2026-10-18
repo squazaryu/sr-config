@@ -86,17 +86,17 @@ class CurrentServiceRouteTests(unittest.TestCase):
             "timeout=5,url=http://www.gstatic.com/generate_204",
         )
 
-    def test_ai_delegates_to_the_finland_group(self):
+    def test_ai_delegates_to_the_germany_group(self):
         self.assertEqual(
             self.groups["AI"],
-            "url-test,FINLAND,interval=600,tolerance=100,timeout=5,"
+            "url-test,GERMANY,interval=600,tolerance=100,timeout=5,"
             "url=http://www.gstatic.com/generate_204",
         )
 
-    def test_ai_delegates_to_the_finland_group(self):
+    def test_ai_delegates_to_the_germany_group(self):
         self.assertEqual(
             self.groups["AI"],
-            "url-test,FINLAND,interval=600,tolerance=100,timeout=5,"
+            "url-test,GERMANY,interval=600,tolerance=100,timeout=5,"
             "url=http://www.gstatic.com/generate_204",
         )
 

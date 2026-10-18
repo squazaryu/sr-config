@@ -13,7 +13,10 @@ WEATHER = "url-test,AUTO,PROXY,policy-select-name=AUTO,interval=600,tolerance=10
 TELEGRAM = "select,AUTO,PROXY,SERVERS,FINLAND,policy-select-name=AUTO"
 YOUTUBE = "select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=PROXY"
 INSTAGRAM = "select,SERVERS,PROXY,AUTO,FINLAND,DIRECT,policy-select-name=PROXY"
-AUTO = "url-test,⚡️ULTRA,AUTO 2 → [🚀 ОПТИМАЛЬНАЯ],AUTO 4 → [🚀 ОПТИМАЛЬНАЯ],AUTO 5 → [🚀 ОПТИМАЛЬНАЯ],AUTO 3 → [🚀 ОПТИМАЛЬНАЯ],AUTO → [🚀 ОПТИМАЛЬНАЯ ЛОКАЦИЯ],interval=300,tolerance=50,timeout=5,url=http://www.gstatic.com/generate_204"
+AUTO = "url-test,⚡️ULTRA,AUTO 2 → [🚀 ОПТИМАЛЬНАЯ],AUTO 4 → [🚀 ОПТИМАЛЬНАЯ],AUTO 5 → [🚀 ОПТИМАЛЬНАЯ],AUTO 3 → [🚀 ОПТИМАЛЬНАЯ],AUTO → [🚀 ОПТИМАЛЬНАЯ ЛОКАЦИЯ],AUTO → [🚀 ОПТИМАЛЬНАЯ],AUTO 6 → [🚀 ОПТИМАЛЬНАЯ],AUTO 7 → [🚀 ОПТИМАЛЬНАЯ],AUTO 8 → [🚀 ОПТИМАЛЬНАЯ],policy-select-name=⚡️ULTRA,interval=300,tolerance=50,timeout=5,url=http://www.gstatic.com/generate_204"
+AI = "url-test,GERMANY,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
+GERMANY = "url-test,GERMANY 🇩🇪,policy-select-name=GERMANY 🇩🇪,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
+USA = "url-test,USA 🇺🇸,policy-select-name=USA 🇺🇸,interval=600,tolerance=100,timeout=5,url=http://www.gstatic.com/generate_204"
 
 
 class IOSFinalProfileTests(unittest.TestCase):
@@ -30,6 +33,9 @@ class IOSFinalProfileTests(unittest.TestCase):
         self.assertEqual(self.lines[0], HEADER)
 
     def test_user_selected_service_defaults_and_auto_pool_are_exact(self):
+        self.assertEqual(self.groups["AI"], AI)
+        self.assertEqual(self.groups["GERMANY"], GERMANY)
+        self.assertEqual(self.groups["USA"], USA)
         self.assertEqual(self.groups["WEATHER"], WEATHER)
         self.assertEqual(self.groups["TELEGRAM"], TELEGRAM)
         self.assertEqual(self.groups["YOUTUBE"], YOUTUBE)
